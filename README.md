@@ -1,6 +1,7 @@
 # FunnerRetro Server
 
 [![Build Status](https://travis-ci.org/carbonblack/funnerretro-server.svg?branch=master)](https://travis-ci.org/carbonblack/funnerretro-server)
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/funnerretro-server/badge.svg?branch=master)](https://coveralls.io/github/carbonblack/funnerretro-server?branch=master)
 
 This is the repo for the websocket server and user auth on FunnerRetro.
 
