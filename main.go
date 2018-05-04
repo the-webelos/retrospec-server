@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -31,16 +32,18 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	fs := http.FileServer(http.Dir("./public"))
+	port := os.Getenv("PORT")
 
-	http.Handle("/", fs)
+	if port == "" {
+		log.Fatal("Must provide PORT as an environment variable")
+	}
+
 	http.HandleFunc("/ws", handleConnections)
 
 	go handleMessages()
 
-	log.Println("http server started on :8000")
-	err := http.ListenAndServe(":8000", nil)
-	if err != nil {
+	log.Println("Server started on" + port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
@@ -57,8 +60,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		var msg Message
-		err := ws.ReadJSON(&msg)
-		if err != nil {
+		if err := ws.ReadJSON(&msg); err != nil {
 			delete(clients, ws)
 			break
 		}
@@ -70,8 +72,7 @@ func handleMessages() {
 	for {
 		msg := <-broadcast
 		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
+			if err := client.WriteJSON(msg); err != nil {
 				client.Close()
 				delete(clients, client)
 			}
