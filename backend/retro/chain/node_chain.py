@@ -1,4 +1,3 @@
-import time
 import uuid
 from functools import partial
 
@@ -13,13 +12,6 @@ class Node(object):
         self.parent = None
 
     def neighbors(self):
-        if self.parent:
-            yield self.parent
-        if self.children:
-            for child in self.children:
-                yield child
-
-    def children(self):
         raise NotImplementedError
 
     def __str__(self):
@@ -29,7 +21,7 @@ class Node(object):
         if not isinstance(other, Node):
             return False
 
-        return other.id == self.id and other.content == self.content
+        return other.id == self.id and other.content == self.content and self.version == other.version
 
     def _dict_items(self):
         return {}
@@ -46,11 +38,11 @@ class RootNode(Node):
 
     def __init__(self, id, content=None, version=1, children=list()):
         super(RootNode, self).__init__(id, content, version)
-        self._children = children
+        self.children = children
 
-    @property
-    def children(self):
-        return self._children
+    def neighbors(self):
+        for child in self.children:
+            yield child
 
     def __eq__(self, other):
         if not isinstance(other, RootNode):
@@ -70,16 +62,18 @@ class ContentNode(Node):
         self.parent=parent
         self.child=child
 
-    @property
-    def children(self):
-        return [self.child] if self.child else None
+    def neighbors(self):
+        if self.parent:
+            yield self.parent
+        if self.child:
+            yield self.child
 
     def __eq__(self, other):
         if not isinstance(other, ContentNode):
             return False
 
-        return other.id == self.id and other.content == self.content and other.parent == self.parent \
-               and other.child == self.child
+        return other.id == self.id and other.content == self.content and other.version == self.version \
+                and other.parent == self.parent and other.child == self.child
 
     def _dict_items(self):
         return {"parent": self.parent, "child": self.child}
@@ -96,35 +90,37 @@ class ColumnHeaderNode(ContentNode):
         if not isinstance(other, ColumnHeaderNode):
             return False
 
-        return other.id == self.id and other.content == self.content and other.parent == self.parent \
-               and other.child == self.child and other.order == self.order
+        return other.id == self.id and other.content == self.content and other.version == self.version \
+                and other.parent == self.parent and other.child == self.child and other.order == self.order
 
     def _dict_items(self):
         return {"parent": self.parent, "child": self.child, "order": self.order}
 
 
 class NodeChain(object):
-    def __init__(self, store, head_id=None):
+    def __init__(self, store, board_id=None):
         self.store = store
-        if not head_id:
-            self.head_id = self.store.next_node_id()
-            self.store.create_board(RootNode(self.head_id, content=""))
-        self.head_id = head_id
+        if not board_id:
+            self.board_id = self.store.next_node_id()
+            self.store.create_board(RootNode(self.board_id, content=""))
+        self.board_id = board_id
 
     def nodes(self):
-        return self._collect_nodes(self.head_id)
+        return self._collect_nodes(self.board_id)
 
     def get_node(self, node_id):
         return self.store.get_node(node_id)
 
     def add_node(self, node_content, parent_id):
-        nodes = self.store.transaction(self.head_id, partial(self._add_node, node_content, parent_id))
+        nodes = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
         return nodes[1]
 
     def move_node(self, node_id, new_parent_id):
-        nodes = self.store.transaction(self.head_id, partial(self._move_node, node_id, new_parent_id))
+        nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes[0]
 
+    def remove_node(self, node_id):
+        nodes = self.store.transaction(self.board_id, )
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
         child = None
