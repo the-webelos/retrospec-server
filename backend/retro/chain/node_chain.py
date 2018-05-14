@@ -121,6 +121,7 @@ class NodeChain(object):
 
     def remove_node(self, node_id):
         nodes = self.store.transaction(self.board_id, )
+
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
         child = None
