@@ -30,12 +30,12 @@ class RedisStore(Store):
 
                     board_version = int(pipe.hget(board_id, 'version'))
 
-                    nodes = func(RedisStore(client=pipe))
+                    update_nodes, remove_nodes = func(RedisStore(client=pipe))
 
                     # start transaction
                     pipe.multi()
 
-                    for node in nodes:
+                    for node in update_nodes:
                         node.version = board_version + 1
                         node_dict = node.to_dict()
 
@@ -46,8 +46,11 @@ class RedisStore(Store):
 
                         pipe.hset(board_id, 'version', board_version + 1)
 
+                    for node in remove_nodes:
+                        pipe.delete(node.id)
+
                     pipe.execute()
 
-                    return nodes
+                    return update_nodes
                 except WatchError:
                     _logger.info("Transaction failed")

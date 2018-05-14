@@ -30,7 +30,7 @@ class TestNodeChain(unittest.TestCase):
     def test_transaction(self):
         root = RootNode(id='root', content="RootContent", children=['column_a'])
         column = ColumnHeaderNode(id='column_a', order=0, content="ColumnA", parent="root", child=None)
-        self.store.transaction('root', lambda x: [root, column])
+        self.store.transaction('root', lambda x: ([root, column], []))
 
         self.assertEqual(self._get_node_dict_from_redis(root.id),
                          root.to_dict())

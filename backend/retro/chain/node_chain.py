@@ -36,13 +36,19 @@ class Node(object):
 class RootNode(Node):
     NODE_TYPE = 'Root'
 
-    def __init__(self, id, content=None, version=1, children=list()):
+    def __init__(self, id, content=None, version=1, children=set()):
         super(RootNode, self).__init__(id, content, version)
         self.children = children
 
     def neighbors(self):
         for child in self.children:
             yield child
+
+    def remove_child(self, node_id):
+        self.children.remove(node_id)
+
+    def set_child(self, node_id):
+        self.children.add(node_id)
 
     def __eq__(self, other):
         if not isinstance(other, RootNode):
@@ -61,6 +67,13 @@ class ContentNode(Node):
         super(ContentNode, self).__init__(id, content, version)
         self.parent=parent
         self.child=child
+
+    def remove_child(self, node_id):
+        if self.child == node_id:
+            self.child = None
+
+    def set_child(self, node_id):
+        self.child = node_id
 
     def neighbors(self):
         if self.parent:
@@ -120,7 +133,7 @@ class NodeChain(object):
         return nodes[0]
 
     def remove_node(self, node_id):
-        nodes = self.store.transaction(self.board_id, )
+        nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
 
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
@@ -129,18 +142,18 @@ class NodeChain(object):
         if not parent.parent:
             # Parent is the top of the chain.  We will insert this as a new leaf node.
             node = ColumnHeaderNode(uuid.uuid4(), node_content, 1, parent_id)
-            parent.children.append(node.id)
+            parent.set_child(node.id)
         else:
             if parent.child:
                 child = proxy.get_node(parent.child)
             # we will insert this between parent and child nodes
             node = ContentNode(uuid.uuid4(), node_content, 1, parent_id, parent.child)
 
-            parent.child = node.id
+            parent.set_child(node.id)
             if child:
                 child.parent = node.id
 
-        return [parent, node, child] if child else [parent, node]
+        return [parent, node, child] if child else [parent, node], []
 
     def _move_node(self, node_id, new_parent_id, proxy):
         node = proxy.get_node(node_id)
@@ -150,22 +163,35 @@ class NodeChain(object):
 
         new_child = proxy.get_node(new_parent.child) if new_parent.child else None
 
+        # unlink our moving node from old parent
+        old_parent.remove_child(node_id)
         if old_child:
-            old_parent.child = old_child.id
+            # unlink old child from our moving node
+            node.remove_child(old_child.id)
+            old_parent.set_child(old_child.id)
             old_child.parent = old_parent.id
-        else:
-            old_parent.child = None
 
         new_parent.child = node_id
         node.parent = new_parent.id
         if new_child:
-            node.child = new_child.id
+            node.set_child(new_child.id)
             new_child.parent = node_id
-        else:
-            node.child = None
 
         nodes = [node, new_parent, new_child, old_parent, old_child]
-        return [node for node in nodes if node is not None]
+        return [node for node in nodes if node is not None], []
+
+    def _remove_node(self, node_id, proxy):
+        node = proxy.get_node(node_id)
+        parent = proxy.get_node(node.parent)
+        child = proxy.get_node(node.child) if node.child else None
+
+        parent.remove_child(node_id)
+        if child:
+            parent.set_child(child.id)
+            child.parent = parent.id
+
+        update_nodes = [parent, child] if child else [parent]
+        return update_nodes, [node]
 
     def _collect_nodes(self, root_id, parent_id=None):
         collected = {}
