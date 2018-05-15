@@ -10,22 +10,35 @@ class TestRetroApi(unittest.TestCase):
         self.base_url = "http://%s:%s" % (self.cfg.RetroApiHost, self.cfg.RetroApiPort)
 
     def test_create_node(self):
-        create_board_response = self._create_board()
-        pprint(create_board_response)
-
-        board_id = create_board_response.get("id")
-        create_column_response = self._create_node(board_id, board_id)
-        pprint(create_column_response)
-
-        column_id = create_column_response.get("id")
-        create_node_response = self._create_node(board_id, column_id)
-        pprint(create_node_response)
-
+        board_id = self._create_simple_board()
         get_board_response = self._get_board(board_id)
-        print()
         pprint(get_board_response)
 
         return get_board_response
+
+    def test_edit_node(self):
+        board_id = self._create_simple_board()
+        get_board_response = self._get_board(board_id)
+
+    def _create_simple_board(self):
+        create_board_response = self._create_board()
+        board_id = create_board_response.get("id")
+
+        create_column1_response = self._create_node(board_id, board_id)
+        column1_id = create_column1_response.get("id")
+
+        create_column2_response = self._create_node(board_id, board_id)
+        column2_id = create_column2_response.get("id")
+
+        create_column1_node1_response = self._create_node(board_id, column1_id)
+        column1_node1_id = create_column1_node1_response.get("id")
+        create_column2_node1_response = self._create_node(board_id, column2_id)
+        column2_node1_id = create_column2_node1_response.get("id")
+
+        self._create_node(board_id, column1_node1_id)
+        self._create_node(board_id, column2_node1_id)
+
+        return board_id
 
     def _get_board(self, board_id):
         route = "/api/v1/boards/%s" % board_id
