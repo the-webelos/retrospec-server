@@ -97,9 +97,9 @@ class Board(object):
         if op == "SET":
             node.content[field] = value
         elif op == "INCR":
-            node.content[field] = int(node.content.get("field", 0)) + int(value)
+            node.content[field] = int(node.content.get(field, 0)) + int(value)
         elif op == "DELETE":
-            node.content.pop(field)
+            node.content.pop(field, None)
         else:
             raise UnsupportedOperationError("Unsupported operation type '%s'! Must be one of %s." % (op, valid_ops))
 
