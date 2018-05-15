@@ -15,12 +15,12 @@ class RedisStore(Store):
     def get_node(self, node_id):
         node_dict = self.client.hgetall(node_id)
         for k, v in node_dict.items():
-            node_dict[k] = json.loads(v)
+            node_dict[k] = json.loads(v)['value']
 
-        return self.node_from_dict(self.client.hgetall(node_id))
+        return self.node_from_dict(node_dict)
 
     def create_board(self, board_node):
-        self.client.hmset(board_node.id, board_node.to_dict())
+        self.client.hmset(board_node.id, self._get_node_map(board_node))
 
     def transaction(self, board_id, func):
         with self.client.pipeline(True) as pipe:
@@ -28,7 +28,7 @@ class RedisStore(Store):
                 try:
                     pipe.watch(board_id)
 
-                    board_version = int(pipe.hget(board_id, 'version'))
+                    board_version = json.loads(pipe.hget(board_id, 'version'))['value']
 
                     update_nodes, remove_nodes = func(RedisStore(client=pipe))
 
@@ -37,14 +37,11 @@ class RedisStore(Store):
 
                     for node in update_nodes:
                         node.version = board_version + 1
-                        node_dict = node.to_dict()
-
-                        for k,v in node_dict.items():
-                            node_dict[k] = json.dumps(v)
+                        node_dict = self._get_node_map(node)
 
                         pipe.hmset(node.id, node_dict)
 
-                        pipe.hset(board_id, 'version', board_version + 1)
+                        pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
                     for node in remove_nodes:
                         pipe.delete(node.id)
@@ -54,3 +51,11 @@ class RedisStore(Store):
                     return update_nodes
                 except WatchError:
                     _logger.info("Transaction failed")
+
+    def _get_node_map(self, node):
+        node_dict = node.to_dict()
+
+        for k,v in node_dict.items():
+            node_dict[k] = json.dumps({'value': v})
+
+        return node_dict

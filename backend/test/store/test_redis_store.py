@@ -8,7 +8,7 @@ from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
 from helpers import get_redis_container, get_redis_config
 
 
-class TestNodeChain(unittest.TestCase):
+class TestRedisStore(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.redis_container = get_redis_container()
@@ -21,7 +21,7 @@ class TestNodeChain(unittest.TestCase):
 
     def setUp(self):
         self.store = RedisStore(**get_redis_config(self.redis_container))
-        self.store.create_board(BoardNode(id='root', content="RootContent"))
+        self.store.create_board(BoardNode(id='root', content={"name": "test board"}))
 
     def tearDown(self):
         # remove all keys from redis
@@ -32,22 +32,14 @@ class TestNodeChain(unittest.TestCase):
         column = ColumnHeaderNode(id='column_a', order=0, content="ColumnA", parent="root", child=None)
         self.store.transaction('root', lambda x: ([root, column], []))
 
-        self.assertEqual(self._get_node_dict_from_redis(root.id),
+        self.assertEqual(self.store.get_node('root').to_dict(),
                          root.to_dict())
-        self.assertEqual(self._get_node_dict_from_redis(column.id),
+        self.assertEqual(self.store.get_node('column_a').to_dict(),
                          column.to_dict())
 
-    def _get_node_dict_from_redis(self, node_id):
-        config = get_redis_config(self.redis_container)
-        config['encoding'] = 'utf-8'
-        config['decode_responses'] = True
+    def test_get_node(self):
+        node = self.store.get_node('root')
 
-        r = redis.StrictRedis(**config)
-
-        d = r.hgetall(node_id)
-        for k, v in d.items():
-            d[k] = json.loads(v)
-
-        d['version'] = int(d.get('version', 1))
-
-        return d
+        self.assertEqual({'name': 'test board'}, node.content)
+        self.assertEqual('root', node.id)
+        self.assertEqual(1, node.version)

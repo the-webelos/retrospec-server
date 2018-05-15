@@ -10,7 +10,6 @@ class Config(object):
 
     @staticmethod
     def from_env():
-        print("OS ENV: %s" % os.environ)
         cfg = Config()
         for k, v in os.environ.items():
             if hasattr(cfg, k.lower()):
