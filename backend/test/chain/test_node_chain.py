@@ -1,12 +1,13 @@
 
 import unittest
 from retro.store.mem_store import MemStore
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, RootNode, NodeChain
+from retro.chain.board import Board
+from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
 
 
 class TestNodeChain(unittest.TestCase):
     def setUp(self):
-        default_nodes = {"root": RootNode("root", "RootContent", 1, {'column_a', 'column_b'}).to_dict(),
+        default_nodes = {"root": BoardNode("root", "RootContent", 1, {'column_a', 'column_b'}).to_dict(),
                          "column_a": ColumnHeaderNode("column_a", "ColumnA", 1, 0, "root", "node_1").to_dict(),
                          "column_b": ColumnHeaderNode("column_b", "ColumnB", 1, 1, "root", "node_5").to_dict(),
                          "node_1": ContentNode("node_1", "Node1", 1, "column_a", "node_2").to_dict(),
@@ -18,11 +19,11 @@ class TestNodeChain(unittest.TestCase):
         self.store = MemStore(default_nodes)
 
     def test_populate_chain(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         self.assertEqual(9, len(chain.nodes()))
 
-        self.assertEqual(RootNode(id='root', content="RootContent", version=1, children={'column_a', 'column_b'}),
+        self.assertEqual(BoardNode(id='root', content="RootContent", version=1, children={'column_a', 'column_b'}),
                          chain.get_node('root'))
 
         self.assertEqual(ColumnHeaderNode(id='column_a', order=0, content="ColumnA", version=1, parent="root", child="node_1"),
@@ -50,7 +51,7 @@ class TestNodeChain(unittest.TestCase):
                          chain.get_node('node_6'))
 
     def test_add_node_to_root(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         node = chain.add_node('new_content', 'root')
 
@@ -60,7 +61,7 @@ class TestNodeChain(unittest.TestCase):
                          self.store.get_node(node.id))
 
     def test_add_node_to_column_end(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         node = chain.add_node('new_content', 'node_4')
 
@@ -70,7 +71,7 @@ class TestNodeChain(unittest.TestCase):
                          node.parent)
 
     def test_add_node_between_nodes(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         node = chain.add_node('new_content', 'node_1')
 
@@ -84,7 +85,7 @@ class TestNodeChain(unittest.TestCase):
                          self.store.get_node('node_2').parent)
 
     def test_move_node(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         node = chain.move_node("node_2", "node_5")
 
@@ -96,7 +97,7 @@ class TestNodeChain(unittest.TestCase):
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
 
     def test_remove_node(self):
-        chain = NodeChain(self.store, 'root')
+        chain = Board(self.store, 'root')
 
         chain.remove_node("node_2")
 

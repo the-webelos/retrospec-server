@@ -4,8 +4,9 @@ from retro.store import Store
 
 
 class MemStore(Store):
-    def __init__(self, nodes):
-        self.nodes = nodes
+    def __init__(self, nodes=None):
+        super(MemStore, self).__init__()
+        self.nodes = nodes if nodes else {}
         self.lock = threading.RLock()
 
     def get_node(self, node_id):
@@ -17,6 +18,14 @@ class MemStore(Store):
 
     def create_board(self, board_node):
         self.nodes[board_node.id] = board_node.to_dict()
+
+    def get_ids_by_type(self, node_type):
+        board_ids = []
+        for node_id, node in self.nodes.items():
+            if node.get("type") == node_type:
+                board_ids.append(node_id)
+
+        return board_ids
 
     def transaction(self, board_id, func):
         with self.lock:

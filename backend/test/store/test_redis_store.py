@@ -4,7 +4,7 @@ import redis
 import unittest
 
 from retro.store.redis_store import RedisStore
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, RootNode
+from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
 from helpers import get_redis_container, get_redis_config
 
 
@@ -21,14 +21,14 @@ class TestNodeChain(unittest.TestCase):
 
     def setUp(self):
         self.store = RedisStore(**get_redis_config(self.redis_container))
-        self.store.create_board(RootNode(id='root', content="RootContent"))
+        self.store.create_board(BoardNode(id='root', content="RootContent"))
 
     def tearDown(self):
         # remove all keys from redis
         self.store.client.flushall()
 
     def test_transaction(self):
-        root = RootNode(id='root', content="RootContent", children=['column_a'])
+        root = BoardNode(id='root', content="RootContent", children=['column_a'])
         column = ColumnHeaderNode(id='column_a', order=0, content="ColumnA", parent="root", child=None)
         self.store.transaction('root', lambda x: ([root, column], []))
 

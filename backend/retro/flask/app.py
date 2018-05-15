@@ -8,7 +8,9 @@
 
 
 from flask import Flask
-from retro.flask import api_blueprint
+
+from retro.engine.board_engine import BoardEngine
+from retro.flask import retro_api_blueprint
 from retro.store.mem_store import MemStore
 from retro.utils.config import Config
 
@@ -16,8 +18,9 @@ from retro.utils.config import Config
 def buildapp_from_config(cfg):
     nodes = {}
     store = MemStore(nodes)
+    board_engine = BoardEngine(cfg, store=store)
     app = Flask(__name__)
-    app.register_blueprint(api_blueprint.build_blueprint(store))
+    app.register_blueprint(retro_api_blueprint.build_blueprint(board_engine))
 
     return app
 

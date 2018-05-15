@@ -1,15 +1,15 @@
 import uuid
 
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, RootNode
+from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
 
 
 class Store(object):
-    node_types = {RootNode.NODE_TYPE: RootNode,
+    node_types = {BoardNode.NODE_TYPE: BoardNode,
                   ContentNode.NODE_TYPE: ContentNode,
                   ColumnHeaderNode.NODE_TYPE: ColumnHeaderNode}
 
     def next_node_id(self):
-        return uuid.uuid4()
+        return str(uuid.uuid4())
 
     def transaction(self, board_id, func):
         raise NotImplementedError
