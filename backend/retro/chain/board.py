@@ -1,5 +1,6 @@
 from functools import partial
-from retro.chain.node import BoardNode, ColumnHeaderNode, ContentNode
+from retro.chain.exceptions import UnsupportedOperationError
+from retro.chain.node import ColumnHeaderNode, ContentNode
 
 
 class Board(object):
@@ -21,8 +22,8 @@ class Board(object):
         nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes[0]
 
-    def edit_node(self, node_id, content):
-        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, content))
+    def edit_node(self, node_id, field, value, op):
+        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, field, value, op))
 
         return nodes[0]
 
@@ -90,9 +91,17 @@ class Board(object):
         update_nodes = [parent, child] if child else [parent]
         return update_nodes, [node]
 
-    def _edit_node(self, node_id, content, proxy):
+    def _edit_node(self, node_id, field, value, op, proxy):
+        valid_ops = ["SET", "INCR", "DELETE"]
         node = proxy.get_node(node_id)
-        node.content.update(content)
+        if op == "SET":
+            node.content[field] = value
+        elif op == "INCR":
+            node.content[field] = int(node.content.get("field", 0)) + int(value)
+        elif op == "DELETE":
+            node.content.pop(field)
+        else:
+            raise UnsupportedOperationError("Unsupported operation type '%s'! Must be one of %s." % (op, valid_ops))
 
         return [node], []
 

@@ -96,6 +96,51 @@ class TestBoard(unittest.TestCase):
         self.assertEqual("node_3", self.store.get_node("node_1").child)
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
 
+    def test_edit_node_set_not_exists(self):
+        chain = Board(self.store, 'root')
+
+        node = chain.edit_node("node_2", "foo", "bar", "SET")
+        self.assertEquals("bar", node.content.get("foo"))
+        self.assertEquals("bar", self.store.get_node("node_2").content.get("foo"))
+
+    def test_edit_node_set_exists(self):
+        chain = Board(self.store, 'root')
+
+        chain.edit_node("node_2", "foo", "bar", "SET")
+        node = chain.edit_node("node_2", "foo", "baz", "SET")
+        self.assertEquals("baz", node.content.get("foo"))
+        self.assertEquals("baz", self.store.get_node("node_2").content.get("foo"))
+
+    def test_edit_node_incr_not_exists(self):
+        chain = Board(self.store, 'root')
+
+        node = chain.edit_node("node_2", "foo", 1, "INCR")
+        self.assertEquals(1, node.content.get("foo"))
+        self.assertEquals(1, self.store.get_node("node_2").content.get("foo"))
+
+    def test_edit_node_incr_exists(self):
+        chain = Board(self.store, 'root')
+
+        chain.edit_node("node_2", "foo", 1, "SET")
+        node = chain.edit_node("node_2", "foo", 4, "INCR")
+        self.assertEquals(5, node.content.get("foo"))
+        self.assertEquals(5, self.store.get_node("node_2").content.get("foo"))
+
+    def test_edit_node_delete_not_exists(self):
+        chain = Board(self.store, 'root')
+
+        node = chain.edit_node("node_2", "foo", None, "DELETE")
+        self.assertTrue("foo" not in node.content)
+        self.assertTrue("foo" not in self.store.get_node("node_2").content)
+
+    def test_edit_node_delete_exists(self):
+        chain = Board(self.store, 'root')
+
+        chain.edit_node("node_2", "foo", "bar", "SET")
+        node = chain.edit_node("node_2", "foo", None, "DELETE")
+        self.assertTrue("foo" not in node.content)
+        self.assertTrue("foo" not in self.store.get_node("node_2").content)
+
     def test_remove_node(self):
         chain = Board(self.store, 'root')
 

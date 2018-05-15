@@ -1,6 +1,5 @@
 from pprint import pprint
 import requests
-import json
 import unittest
 from retro.utils.config import Config
 
@@ -15,26 +14,50 @@ class TestRetroApi(unittest.TestCase):
         pprint(create_board_response)
 
         board_id = create_board_response.get("id")
-        route = "/api/boards/%s/nodes/create" % board_id
-        data = {"parent_id": board_id}
+        create_column_response = self._create_node(board_id, board_id)
+        pprint(create_column_response)
 
-        req = requests.post(self._get_url(route), data=json.dumps(data))
-        req.raise_for_status()
-        create_node_response = req.json()
-
+        column_id = create_column_response.get("id")
+        create_node_response = self._create_node(board_id, column_id)
         pprint(create_node_response)
 
-        return create_node_response
+        get_board_response = self._get_board(board_id)
+        print()
+        pprint(get_board_response)
 
-    def _create_board(self, name="my test board"):
-        route = "/api/boards/create"
-        data = {"name": name}
+        return get_board_response
 
-        req = requests.post(self.base_url + route, data=json.dumps(data))
+    def _get_board(self, board_id):
+        route = "/api/v1/boards/%s" % board_id
+        req = requests.get(self._build_url(route))
+        req.raise_for_status()
+
+        return req.json()
+
+    def _create_node(self, board_id, parent_id):
+        route = "/api/v1/boards/%s/nodes" % board_id
+        data = {"parent_id": parent_id}
+
+        req = requests.post(self._build_url(route), json=data)
         req.raise_for_status()
         response = req.json()
 
         return response
 
-    def _get_url(self, route):
+    def _create_board(self, name="my test board"):
+        route = "/api/v1/boards"
+        data = {"name": name}
+
+        req = requests.post(self.base_url + route, json=data)
+        req.raise_for_status()
+        response = req.json()
+
+        return response
+
+    def _build_url(self, route):
         return "%s%s" % (self.base_url, route)
+
+    def _do_post(self, route, **kwargs):
+        req = requests.post(self._build_url(route), **kwargs)
+        req.raise_for_status()
+        return req.json()
