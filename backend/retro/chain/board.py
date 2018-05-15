@@ -22,10 +22,9 @@ class Board(object):
         return nodes[0]
 
     def edit_node(self, node_id, content):
-        node = self.store.get_node(node_id)
-        node.content = {**node.content, **content}
+        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, content))
 
-        return node
+        return nodes[0]
 
     def remove_node(self, node_id):
         nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
@@ -90,6 +89,12 @@ class Board(object):
 
         update_nodes = [parent, child] if child else [parent]
         return update_nodes, [node]
+
+    def _edit_node(self, node_id, content, proxy):
+        node = proxy.get_node(node_id)
+        node.content.update(content)
+
+        return [node], []
 
     # TODO Not race condition safe
     def _collect_nodes(self, root_id, parent_id=None):
