@@ -8,6 +8,8 @@ _logger = logging.getLogger(__name__)
 
 
 class RedisStore(Store):
+    BOARD_SET_KEY = 'boards'
+
     def __init__(self, host=None, port=None, client=None):
         super(RedisStore, self).__init__()
         self.client = client if client is not None else redis.StrictRedis(host=host,
@@ -24,6 +26,10 @@ class RedisStore(Store):
 
     def create_board(self, board_node):
         self.client.hmset(board_node.id, self._get_node_map(board_node))
+        self.client.sadd(self.BOARD_SET_KEY, board_node.id)
+
+    def get_board_ids(self):
+        return self.client.smembers(self.BOARD_SET_KEY)
 
     def transaction(self, board_id, func):
         with self.client.pipeline(True) as pipe:

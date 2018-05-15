@@ -20,9 +20,9 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/v1/boards", methods=["GET"])
     def get_all_boards():
-        boards = board_engine.get_all_boards()
+        boards = board_engine.get_boards()
 
-        return make_response_json(boards)
+        return make_response_json({"boards": [node.to_dict() for node in boards]})
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["GET"])
     def get_board(board_id):

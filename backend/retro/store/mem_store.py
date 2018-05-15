@@ -7,6 +7,7 @@ class MemStore(Store):
     def __init__(self, nodes=None):
         super(MemStore, self).__init__()
         self.nodes = nodes if nodes else {}
+        self.boards = set()
         self.lock = threading.RLock()
 
     def get_node(self, node_id):
@@ -17,7 +18,11 @@ class MemStore(Store):
             return self.node_from_dict(node_dict)
 
     def create_board(self, board_node):
+        self.boards.add(board_node.id)
         self.nodes[board_node.id] = board_node.to_dict()
+
+    def get_board_ids(self):
+        return self.boards
 
     def get_ids_by_type(self, node_type):
         board_ids = []

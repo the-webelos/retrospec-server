@@ -14,19 +14,17 @@ class BoardEngine(object):
 
         return board_node
 
-    def get_all_boards(self):
-        boards = {}
-        for board_id in self.store.get_ids_by_type(BoardNode.NODE_TYPE):
-            board_nodes = self.get_board(board_id)
-            dict_nodes = [node.to_dict() for node in board_nodes.values()]
-            boards[board_id] = dict_nodes
-
-        return boards
-
     def get_board(self, board_id):
         board = Board(self.store, board_id)
 
         return board.nodes()
+
+    def get_boards(self):
+        boards = []
+        for id in self.store.get_board_ids():
+            boards.append(self.store.get_node(id))
+
+        return boards
 
     def add_node(self, board_id, parent_id, content=None):
         board = Board(self.store, board_id)
