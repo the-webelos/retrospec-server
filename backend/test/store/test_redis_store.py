@@ -1,5 +1,7 @@
 
 import json
+from functools import partial
+
 import redis
 import unittest
 
@@ -28,14 +30,19 @@ class TestRedisStore(unittest.TestCase):
         self.store.client.flushall()
 
     def test_transaction(self):
-        root = BoardNode(id='root', content="RootContent", children=['column_a'])
-        column = ColumnHeaderNode(id='column_a', content="ColumnA", parent="root", child=None)
-        self.store.transaction('root', lambda x: ([root, column], []))
+        #column = ColumnHeaderNode(id='column_a', content="ColumnA", parent="root", child=None)
+        node, parent = self.store.transaction('root', partial(self._transaction, {"foo": "ColumnA"}, "root"))
+        root = self.store.get_node('root')
 
-        self.assertEqual(self.store.get_node('root').to_dict(),
-                         root.to_dict())
-        self.assertEqual(self.store.get_node('column_a').to_dict(),
-                         column.to_dict())
+        self.assertEqual({node.id}, root.children)
+        self.assertEqual(2, root.version)
+
+        self.assertEqual(parent.to_dict(), root.to_dict())
+
+        self.assertEqual('root',
+                         self.store.get_node(node.id).parent)
+        self.assertEqual({"foo": "ColumnA"},
+                         self.store.get_node(node.id).content)
 
     def test_get_node(self):
         node = self.store.get_node('root')
@@ -43,3 +50,11 @@ class TestRedisStore(unittest.TestCase):
         self.assertEqual({'name': 'test board'}, node.content)
         self.assertEqual('root', node.id)
         self.assertEqual(1, node.version)
+
+    def _transaction(self, node_content, parent_id, proxy):
+        parent = proxy.get_node(parent_id)
+
+        node = ColumnHeaderNode(proxy.next_node_id(), node_content, parent=parent_id)
+        parent.set_child(node.id)
+
+        return [node, parent], []

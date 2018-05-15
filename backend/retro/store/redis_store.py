@@ -10,7 +10,10 @@ _logger = logging.getLogger(__name__)
 class RedisStore(Store):
     def __init__(self, host=None, port=None, client=None):
         super(RedisStore, self).__init__()
-        self.client = client or redis.StrictRedis(host=host, port=port, encoding='utf-8', decode_responses=True)
+        self.client = client if client is not None else redis.StrictRedis(host=host,
+                                                                          port=port,
+                                                                          encoding='utf-8',
+                                                                          decode_responses=True)
 
     def get_node(self, node_id):
         node_dict = self.client.hgetall(node_id)
