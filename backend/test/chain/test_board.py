@@ -8,8 +8,8 @@ from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
 class TestBoard(unittest.TestCase):
     def setUp(self):
         default_nodes = {"root": BoardNode("root", {"test": "RootContent"}, 1, {'column_a', 'column_b'}).to_dict(),
-                         "column_a": ColumnHeaderNode("column_a", {"test": "ColumnA"}, 1, 0, "root", "node_1").to_dict(),
-                         "column_b": ColumnHeaderNode("column_b", {"test": "ColumnB"}, 1, 1, "root", "node_5").to_dict(),
+                         "column_a": ColumnHeaderNode("column_a", {"test": "ColumnA"}, 1, "root", "node_1").to_dict(),
+                         "column_b": ColumnHeaderNode("column_b", {"test": "ColumnB"}, 1, "root", "node_5").to_dict(),
                          "node_1": ContentNode("node_1", {"test": "Node1"}, 1, "column_a", "node_2").to_dict(),
                          "node_2": ContentNode("node_2", {"test": "Node2"}, 1, "node_1", "node_3").to_dict(),
                          "node_3": ContentNode("node_3", {"test": "Node3"}, 1, "node_2", "node_4").to_dict(),
@@ -26,7 +26,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(BoardNode(id='root', content={"test": "RootContent"}, version=1, children={'column_a', 'column_b'}),
                          chain.get_node('root'))
 
-        self.assertEqual(ColumnHeaderNode(id='column_a', order=0, content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
+        self.assertEqual(ColumnHeaderNode(id='column_a', content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
                          chain.get_node('column_a'))
 
         self.assertEqual(ContentNode(id='node_1', content={"test": "Node1"}, version=1, parent="column_a", child="node_2"),
@@ -41,7 +41,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ContentNode(id='node_4', content={"test": "Node4"}, version=1, parent="node_3", child=None),
                          chain.get_node('node_4'))
 
-        self.assertEqual(ColumnHeaderNode(id='column_b', order=1, content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
+        self.assertEqual(ColumnHeaderNode(id='column_b', content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
                          chain.get_node('column_b'))
 
         self.assertEqual(ContentNode(id='node_5', content={"test": "Node5"}, version=1, parent="column_b", child="node_6"),

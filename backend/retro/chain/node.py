@@ -91,16 +91,15 @@ class ContentNode(Node):
 class ColumnHeaderNode(ContentNode):
     NODE_TYPE = 'ColumnHeader'
 
-    def __init__(self, id, content=None, version=1, order=None, parent=None, child=None):
+    def __init__(self, id, content=None, version=1, parent=None, child=None):
         super(ColumnHeaderNode, self).__init__(id, content, version, parent, child)
-        self.order = order
 
     def __eq__(self, other):
         if not isinstance(other, ColumnHeaderNode):
             return False
 
         return other.id == self.id and other.content == self.content and other.version == self.version \
-                and other.parent == self.parent and other.child == self.child and other.order == self.order
+                and other.parent == self.parent and other.child == self.child
 
     def _dict_items(self):
-        return {"parent": self.parent, "child": self.child, "order": self.order}
+        return {"parent": self.parent, "child": self.child}

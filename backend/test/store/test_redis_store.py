@@ -29,7 +29,7 @@ class TestRedisStore(unittest.TestCase):
 
     def test_transaction(self):
         root = BoardNode(id='root', content="RootContent", children=['column_a'])
-        column = ColumnHeaderNode(id='column_a', order=0, content="ColumnA", parent="root", child=None)
+        column = ColumnHeaderNode(id='column_a', content="ColumnA", parent="root", child=None)
         self.store.transaction('root', lambda x: ([root, column], []))
 
         self.assertEqual(self.store.get_node('root').to_dict(),
