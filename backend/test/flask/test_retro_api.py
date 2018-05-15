@@ -7,7 +7,7 @@ from retro.utils.config import Config
 class TestRetroApi(unittest.TestCase):
     def setUp(self):
         self.cfg = Config()
-        self.base_url = "http://%s:%s" % (self.cfg.RetroApiHost, self.cfg.RetroApiPort)
+        self.base_url = "http://%s:%s" % (self.cfg.retro_api_host, self.cfg.retro_api_port)
 
     def test_create_node(self):
         board_id = self._create_simple_board()
