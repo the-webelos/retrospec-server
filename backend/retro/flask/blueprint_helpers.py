@@ -1,6 +1,6 @@
 import datetime
 import decimal
-import simplejson
+import json
 from flask import make_response
 from retro.utils import timedelta_total_seconds
 
@@ -23,11 +23,11 @@ def make_response_json(data, *args, **kwargs):
     if not data:
         response = make_response_empty()
     elif args or kwargs:
-        simplejson_kwargs = {"default": default_encoder}
-        simplejson_kwargs.update(kwargs)
-        response = make_response(simplejson.dumps(data, *args, **simplejson_kwargs))
+        json_kwargs = {"default": default_encoder}
+        json_kwargs.update(kwargs)
+        response = make_response(json.dumps(data, *args, **json_kwargs))
     else:
-        response = make_response(simplejson.dumps(data))
+        response = make_response(json.dumps(data))
     response.headers['Content-Type'] = "application/json; charset=utf-8"
     return response
 

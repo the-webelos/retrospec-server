@@ -15,6 +15,10 @@ from retro.store.mem_store import MemStore
 from retro.utils.config import Config
 
 
+def config_from_env():
+    return {}
+
+
 def buildapp_from_config(cfg):
     nodes = {}
     store = MemStore(nodes)
@@ -25,7 +29,9 @@ def buildapp_from_config(cfg):
     return app
 
 
+app = buildapp_from_config(config_from_env())
+
+
 if __name__ == "__main__":
     cfg_ = Config()
-    app_ = buildapp_from_config(cfg_)
-    app_.run(host=cfg_.RetroApiHost, port=cfg_.RetroApiPort, debug=True)
+    app.run(host=cfg_.RetroApiHost, port=cfg_.RetroApiPort, debug=True)

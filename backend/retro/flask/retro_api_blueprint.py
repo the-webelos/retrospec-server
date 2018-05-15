@@ -1,5 +1,5 @@
+import json
 import logging
-import simplejson
 from flask import Blueprint, make_response, request
 from .blueprint_helpers import make_response_json
 
@@ -32,7 +32,7 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/boards/create", methods=["POST"])
     def create_board():
-        args = simplejson.loads(request.data)
+        args = json.loads(request.data)
         name = args.get("name")
         if not name:
             return make_response("No board name provided!", 400)
@@ -51,7 +51,7 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/boards/<board_id>/nodes/create", methods=["POST"])
     def add_node(board_id):
-        args = simplejson.loads(request.data)
+        args = json.loads(request.data)
         parent_id = args.get("parent_id")
         content = args.get("content", {})
 
@@ -61,7 +61,7 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/boards/<board_id>/nodes/<node_id>/move", methods=["PUT"])
     def move_node(board_id, node_id):
-        args = simplejson.loads(request.data)
+        args = json.loads(request.data)
         parent_id = args.get("parent_id")
 
         node = board_engine.move_node(board_id, node_id, parent_id)
@@ -70,7 +70,7 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/boards/<board_id>/nodes/<node_id>/update", methods=["PUT"])
     def edit_node(board_id, node_id):
-        args = simplejson.loads(request.data)
+        args = json.loads(request.data)
         content = args.get("content")
 
         node = board_engine.edit_node(board_id, node_id, content)

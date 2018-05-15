@@ -34,7 +34,7 @@ class BoardNode(Node):
 
     def __init__(self, id, content=None, version=1, children=set()):
         super(BoardNode, self).__init__(id, content, version)
-        self.children = children
+        self.children = set(children)
 
     def neighbors(self):
         for child in self.children:
@@ -53,7 +53,7 @@ class BoardNode(Node):
         return other.id == self.id and other.content == self.content and other.children == self.children
 
     def _dict_items(self):
-        return {"children": self.children}
+        return {"children": list(self.children)}
 
 
 class ContentNode(Node):

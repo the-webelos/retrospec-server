@@ -1,6 +1,6 @@
 from pprint import pprint
 import requests
-import simplejson
+import json
 import unittest
 from retro.utils.config import Config
 
@@ -18,7 +18,7 @@ class TestRetroApi(unittest.TestCase):
         route = "/api/boards/%s/nodes/create" % board_id
         data = {"parent_id": board_id}
 
-        req = requests.post(self._get_url(route), data=simplejson.dumps(data))
+        req = requests.post(self._get_url(route), data=json.dumps(data))
         req.raise_for_status()
         create_node_response = req.json()
 
@@ -30,7 +30,7 @@ class TestRetroApi(unittest.TestCase):
         route = "/api/boards/create"
         data = {"name": name}
 
-        req = requests.post(self.base_url + route, data=simplejson.dumps(data))
+        req = requests.post(self.base_url + route, data=json.dumps(data))
         req.raise_for_status()
         response = req.json()
 
