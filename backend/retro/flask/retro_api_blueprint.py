@@ -42,8 +42,8 @@ def build_blueprint(board_engine):
         return make_response_json(board_node.to_dict())
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["PUT"])
-    def modify_board(board_id):
-        pass
+    def update_board(board_id):
+        return _update_node(board_id, board_id, request.json or {})
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["DELETE"])
     def delete_board(board_id):
@@ -51,29 +51,26 @@ def build_blueprint(board_engine):
         pass
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes", methods=["POST"])
-    def add_node(board_id):
+    def create_node(board_id):
         args = request.json or {}
+
         parent_id = args.get("parent_id")
         content = args.get("content", {})
+
+        if not parent_id:
+            return make_response("No parent_id provided in request!", 400)
 
         node = board_engine.add_node(board_id, parent_id, content)
 
         return make_response_json(node.to_dict())
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["PUT"])
-    def move_node(board_id, node_id):
-        args = request.json or {}
-        parent_id = args.get("parent_id")
-
-        node = board_engine.move_node(board_id, node_id, parent_id)
-
-        return make_response_json(node.to_dict())
-
-    @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["PUT"])
     def update_node(board_id, node_id):
+        return _update_node(board_id, node_id, request.json or {})
+
+    def _update_node(board_id, node_id, args):
         valid_args = ["parent_id", "field", "value", "op"]
 
-        args = request.json or {}
         parent_id = args.get("parent_id")
         field = args.get("field")
         value = args.get("value")
