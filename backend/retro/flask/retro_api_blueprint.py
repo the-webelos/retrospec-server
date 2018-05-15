@@ -1,6 +1,6 @@
-import json
 import logging
 from flask import Blueprint, make_response, request
+from retro.chain.operations import OperationFactory
 from .blueprint_helpers import make_response_json
 
 _logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ def build_blueprint(board_engine):
         if parent_id:
             node = board_engine.move_node(board_id, node_id, parent_id)
         elif field:
-            node = board_engine.edit_node(board_id, node_id, field, value, op)
+            node = board_engine.edit_node(board_id, node_id, OperationFactory().build_operation(op, field, value))
         else:
             return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
 

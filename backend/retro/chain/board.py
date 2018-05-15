@@ -22,8 +22,8 @@ class Board(object):
         nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes[0]
 
-    def edit_node(self, node_id, field, value, op):
-        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, field, value, op))
+    def edit_node(self, node_id, operation):
+        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation))
 
         return nodes[0]
 
@@ -91,17 +91,9 @@ class Board(object):
         update_nodes = [parent, child] if child else [parent]
         return update_nodes, [node]
 
-    def _edit_node(self, node_id, field, value, op, proxy):
-        valid_ops = ["SET", "INCR", "DELETE"]
+    def _edit_node(self, node_id, operation, proxy):
         node = proxy.get_node(node_id)
-        if op == "SET":
-            node.content[field] = value
-        elif op == "INCR":
-            node.content[field] = int(node.content.get(field, 0)) + int(value)
-        elif op == "DELETE":
-            node.content.pop(field, None)
-        else:
-            raise UnsupportedOperationError("Unsupported operation type '%s'! Must be one of %s." % (op, valid_ops))
+        operation.execute(node)
 
         return [node], []
 

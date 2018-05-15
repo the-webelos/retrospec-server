@@ -3,6 +3,7 @@ import unittest
 from retro.store.mem_store import MemStore
 from retro.chain.board import Board
 from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
+from retro.chain.operations import SetOperation, IncrementOperation, DeleteOperation
 
 
 class TestBoard(unittest.TestCase):
@@ -99,45 +100,46 @@ class TestBoard(unittest.TestCase):
     def test_edit_node_set_not_exists(self):
         chain = Board(self.store, 'root')
 
-        node = chain.edit_node("node_2", "foo", "bar", "SET")
+        op = SetOperation("foo", "bar")
+        node = chain.edit_node("node_2", op)
         self.assertEqual("bar", node.content.get("foo"))
         self.assertEqual("bar", self.store.get_node("node_2").content.get("foo"))
 
     def test_edit_node_set_exists(self):
         chain = Board(self.store, 'root')
 
-        chain.edit_node("node_2", "foo", "bar", "SET")
-        node = chain.edit_node("node_2", "foo", "baz", "SET")
+        chain.edit_node("node_2", SetOperation("foo", "bar"))
+        node = chain.edit_node("node_2", SetOperation("foo", "baz"))
         self.assertEqual("baz", node.content.get("foo"))
         self.assertEqual("baz", self.store.get_node("node_2").content.get("foo"))
 
     def test_edit_node_incr_not_exists(self):
         chain = Board(self.store, 'root')
 
-        node = chain.edit_node("node_2", "foo", 1, "INCR")
+        node = chain.edit_node("node_2", IncrementOperation("foo", 1))
         self.assertEqual(1, node.content.get("foo"))
         self.assertEqual(1, self.store.get_node("node_2").content.get("foo"))
 
     def test_edit_node_incr_exists(self):
         chain = Board(self.store, 'root')
 
-        chain.edit_node("node_2", "foo", 1, "SET")
-        node = chain.edit_node("node_2", "foo", 4, "INCR")
+        chain.edit_node("node_2", IncrementOperation("foo", 1))
+        node = chain.edit_node("node_2", IncrementOperation("foo", 4))
         self.assertEqual(5, node.content.get("foo"))
         self.assertEqual(5, self.store.get_node("node_2").content.get("foo"))
 
     def test_edit_node_delete_not_exists(self):
         chain = Board(self.store, 'root')
 
-        node = chain.edit_node("node_2", "foo", None, "DELETE")
+        node = chain.edit_node("node_2", DeleteOperation("foo"))
         self.assertTrue("foo" not in node.content)
         self.assertTrue("foo" not in self.store.get_node("node_2").content)
 
     def test_edit_node_delete_exists(self):
         chain = Board(self.store, 'root')
 
-        chain.edit_node("node_2", "foo", "bar", "SET")
-        node = chain.edit_node("node_2", "foo", None, "DELETE")
+        chain.edit_node("node_2", SetOperation("foo", "bar"))
+        node = chain.edit_node("node_2", DeleteOperation("foo"))
         self.assertTrue("foo" not in node.content)
         self.assertTrue("foo" not in self.store.get_node("node_2").content)
 

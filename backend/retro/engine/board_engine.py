@@ -35,9 +35,9 @@ class BoardEngine(object):
         board = Board(self.store, board_id)
         return board.move_node(node_id, new_parent_id)
 
-    def edit_node(self, board_id, node_id, field, value, op):
+    def edit_node(self, board_id, node_id, operation):
         board = Board(self.store, board_id)
-        return board.edit_node(node_id, field, value, op)
+        return board.edit_node(node_id, operation)
 
     def remove_node(self, board_id, node_id):
         board = Board(self.store, board_id)
