@@ -2,10 +2,10 @@
 import unittest
 from retro.store.mem_store import MemStore
 from retro.chain.board import Board
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
+from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
 
 
-class TestNodeChain(unittest.TestCase):
+class TestBoard(unittest.TestCase):
     def setUp(self):
         default_nodes = {"root": BoardNode("root", "RootContent", 1, {'column_a', 'column_b'}).to_dict(),
                          "column_a": ColumnHeaderNode("column_a", "ColumnA", 1, 0, "root", "node_1").to_dict(),

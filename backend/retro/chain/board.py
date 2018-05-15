@@ -1,5 +1,5 @@
 from functools import partial
-from retro.chain.node_chain import BoardNode, ColumnHeaderNode, ContentNode
+from retro.chain.node import BoardNode, ColumnHeaderNode, ContentNode
 
 
 class Board(object):

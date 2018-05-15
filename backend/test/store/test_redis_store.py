@@ -4,7 +4,7 @@ import redis
 import unittest
 
 from retro.store.redis_store import RedisStore
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
+from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
 from helpers import get_redis_container, get_redis_config
 
 

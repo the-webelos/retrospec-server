@@ -1,6 +1,6 @@
 import uuid
 
-from retro.chain.node_chain import ColumnHeaderNode, ContentNode, BoardNode
+from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
 
 
 class Store(object):

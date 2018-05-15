@@ -1,5 +1,5 @@
 from retro.chain.board import Board
-from retro.chain.node_chain import BoardNode
+from retro.chain.node import BoardNode
 from retro.utils import get_store
 
 
