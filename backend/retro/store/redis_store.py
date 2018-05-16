@@ -65,14 +65,13 @@ class RedisStore(Store):
                             node_dict = self._get_node_map(node)
 
                             pipe.hmset(node.id, node_dict)
-
-                            pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
-
                             pipe.publish(node.id, json.dumps(node.to_dict()))
 
                         for node in remove_nodes:
                             pipe.delete(node.id)
                             pipe.publish(node.id, "DEL")
+
+                        pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
                         pipe.execute()
 
