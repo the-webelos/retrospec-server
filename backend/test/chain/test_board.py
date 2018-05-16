@@ -8,15 +8,15 @@ from retro.chain.operations import SetOperation, IncrementOperation, DeleteOpera
 
 class TestBoard(unittest.TestCase):
     def setUp(self):
-        default_nodes = {"root": BoardNode("root", {"test": "RootContent"}, 1, {'column_a', 'column_b'}).to_dict(),
-                         "column_a": ColumnHeaderNode("column_a", {"test": "ColumnA"}, 1, "root", "node_1").to_dict(),
-                         "column_b": ColumnHeaderNode("column_b", {"test": "ColumnB"}, 1, "root", "node_5").to_dict(),
-                         "node_1": ContentNode("node_1", {"test": "Node1"}, 1, "column_a", "node_2").to_dict(),
-                         "node_2": ContentNode("node_2", {"test": "Node2"}, 1, "node_1", "node_3").to_dict(),
-                         "node_3": ContentNode("node_3", {"test": "Node3"}, 1, "node_2", "node_4").to_dict(),
-                         "node_4": ContentNode("node_4", {"test": "Node4"}, 1, "node_3").to_dict(),
-                         "node_5": ContentNode("node_5", {"test": "Node5"}, 1, "column_b", "node_6").to_dict(),
-                         "node_6": ContentNode("node_6", {"test": "Node6"}, 1, "node_5").to_dict()}
+        default_nodes = {"root": BoardNode("root", {"test": "RootContent"}, 1, None, {'column_a', 'column_b'}).to_dict(),
+                         "column_a": ColumnHeaderNode("column_a", {"test": "ColumnA"}, 1, None, "root", "node_1").to_dict(),
+                         "column_b": ColumnHeaderNode("column_b", {"test": "ColumnB"}, 1, None, "root", "node_5").to_dict(),
+                         "node_1": ContentNode("node_1", {"test": "Node1"}, 1, None, "column_a", "node_2").to_dict(),
+                         "node_2": ContentNode("node_2", {"test": "Node2"}, 1, None, "node_1", "node_3").to_dict(),
+                         "node_3": ContentNode("node_3", {"test": "Node3"}, 1, None, "node_2", "node_4").to_dict(),
+                         "node_4": ContentNode("node_4", {"test": "Node4"}, 1, None, "node_3").to_dict(),
+                         "node_5": ContentNode("node_5", {"test": "Node5"}, 1, None, "column_b", "node_6").to_dict(),
+                         "node_6": ContentNode("node_6", {"test": "Node6"}, 1, None, "node_5").to_dict()}
         self.store = MemStore(default_nodes)
 
     def test_populate_chain(self):

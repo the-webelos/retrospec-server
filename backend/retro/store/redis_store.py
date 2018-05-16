@@ -62,6 +62,11 @@ class RedisStore(Store):
 
                         for node in update_nodes:
                             node.version = board_version + 1
+
+                            #update orig version if needed
+                            if node.orig_version is None:
+                                node.orig_version = node.version
+
                             node_dict = self._get_node_map(node)
 
                             pipe.hmset(node.id, node_dict)

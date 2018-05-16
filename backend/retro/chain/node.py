@@ -1,10 +1,11 @@
 class Node(object):
     NODE_TYPE = 'Node'
 
-    def __init__(self, id, content=None, version=1):
+    def __init__(self, id, content=None, version=1, orig_version=None):
         self.id = id
         self.content = content
         self.version = version
+        self.orig_version = orig_version
         self.parent = None
 
     def neighbors(self):
@@ -23,7 +24,8 @@ class Node(object):
         return {}
 
     def to_dict(self):
-        d = {"type": self.NODE_TYPE, "id": self.id, "content": self.content, 'version': self.version}
+        d = {"type": self.NODE_TYPE, "id": self.id, "content": self.content, 'version': self.version,
+             "orig_version": self.orig_version}
         d.update(self._dict_items())
 
         return d
@@ -32,8 +34,8 @@ class Node(object):
 class BoardNode(Node):
     NODE_TYPE = 'Board'
 
-    def __init__(self, id, content=None, version=1, children=set()):
-        super(BoardNode, self).__init__(id, content, version)
+    def __init__(self, id, content=None, version=1, orig_version=None, children=set()):
+        super(BoardNode, self).__init__(id, content, version, orig_version)
         self.children = set(children)
 
     def neighbors(self):
@@ -59,8 +61,8 @@ class BoardNode(Node):
 class ContentNode(Node):
     NODE_TYPE = 'Content'
 
-    def __init__(self, id, content=None, version=1, parent=None, child=None):
-        super(ContentNode, self).__init__(id, content, version)
+    def __init__(self, id, content=None, version=1, orig_version=None, parent=None, child=None):
+        super(ContentNode, self).__init__(id, content, version, orig_version)
         self.parent=parent
         self.child=child
 
@@ -91,8 +93,8 @@ class ContentNode(Node):
 class ColumnHeaderNode(ContentNode):
     NODE_TYPE = 'ColumnHeader'
 
-    def __init__(self, id, content=None, version=1, parent=None, child=None):
-        super(ColumnHeaderNode, self).__init__(id, content, version, parent, child)
+    def __init__(self, id, content=None, version=1, orig_version=None, parent=None, child=None):
+        super(ColumnHeaderNode, self).__init__(id, content, version, orig_version, parent, child)
 
     def __eq__(self, other):
         if not isinstance(other, ColumnHeaderNode):

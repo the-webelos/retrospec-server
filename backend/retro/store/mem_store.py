@@ -43,6 +43,11 @@ class MemStore(Store):
 
             for node in update_nodes:
                 node.version = board_version + 1
+
+                #update orig version if needed
+                if node.orig_version is None:
+                    node.orig_version = node.version
+
                 node_dict = node.to_dict()
 
                 self.nodes[node.id] = node_dict
