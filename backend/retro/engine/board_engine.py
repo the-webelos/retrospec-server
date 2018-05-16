@@ -19,6 +19,11 @@ class BoardEngine(object):
 
         return board.nodes()
 
+    def delete_board(self, board_id):
+        board = Board(self.store, board_id)
+
+        return board.delete()
+
     def get_boards(self):
         boards = []
         for id in self.store.get_board_ids():

@@ -10,27 +10,33 @@ class Board(object):
 
     def next_node_id(self):
         return "%s|%s" % (self.board_id, self.store.next_node_id())
+
     def nodes(self):
-        return self._collect_nodes(self.board_id)
+        nodes, _, _ = self.store.transaction(self.board_id, partial(self._collect_all))
+        return nodes
+
+    def delete(self):
+        _, _, nodes = self.store.transaction(self.board_id, partial(self._delete_all))
+        return nodes
 
     def get_node(self, node_id):
         return self.store.get_node(node_id)
 
     def add_node(self, node_content, parent_id):
-        nodes = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
+        _, nodes, _ = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
         return nodes[1]
 
     def move_node(self, node_id, new_parent_id):
-        nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
+        _, nodes, _ = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes[0]
 
     def edit_node(self, node_id, operation):
-        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation))
+        _, nodes, _ = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation))
 
         return nodes[0]
 
     def remove_node(self, node_id):
-        nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
+        _, nodes, _ = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
 
         return nodes[0]
 
@@ -53,7 +59,9 @@ class Board(object):
             if child:
                 child.parent = node.id
 
-        return [parent, node, child] if child else [parent, node], []
+        update_nodes = [parent, node, child] if child else [parent, node]
+
+        return [], update_nodes, []
 
     def _move_node(self, node_id, new_parent_id, proxy):
         node = proxy.get_node(node_id)
@@ -78,7 +86,7 @@ class Board(object):
             new_child.parent = node_id
 
         nodes = [node, new_parent, new_child, old_parent, old_child]
-        return [node for node in nodes if node is not None], []
+        return [], [node for node in nodes if node is not None], []
 
     def _remove_node(self, node_id, proxy):
         node = proxy.get_node(node_id)
@@ -91,22 +99,27 @@ class Board(object):
             child.parent = parent.id
 
         update_nodes = [parent, child] if child else [parent]
-        return update_nodes, [node]
+        return [], update_nodes, [node]
 
     def _edit_node(self, node_id, operation, proxy):
         node = proxy.get_node(node_id)
         operation.execute(node)
 
-        return [node], []
+        return [], [node], []
 
-    # TODO Not race condition safe
-    def _collect_nodes(self, root_id, parent_id=None):
+    def _collect_all(self, proxy):
+        return self._collect_nodes(proxy, self.board_id).values(), [], []
+
+    def _delete_all(self, proxy):
+        return [], [], self._collect_nodes(proxy, self.board_id).values()
+
+    def _collect_nodes(self, proxy, root_id, parent_id=None):
         collected = {}
-        top = self.store.get_node(root_id)
+        top = proxy.get_node(root_id)
         collected[top.id] = top
 
         for node_id in top.neighbors():
             if node_id != parent_id:
-                collected.update(self._collect_nodes(node_id, root_id))
+                collected.update(self._collect_nodes(proxy, node_id, root_id))
 
         return collected

@@ -1,4 +1,5 @@
 import threading
+import json
 
 import redis
 
@@ -21,7 +22,12 @@ def subscribe_boards():
         print("NEW BOARD: %s" % event)
         # {'type': 'subscribe', 'pattern': None, 'channel': 'boards', 'data': 1}
         if event['type'] == 'message':
-            threading.Thread(target=subscribe_board, args=(event['data'],)).start()
+            data = json.loads(event['data'])
+            if data['action'] == 'ADD':
+                threading.Thread(target=subscribe_board, args=(data['board'],)).start()
+            elif data['action'] == 'DEL':
+                # Need to kill the subscription somehow
+                pass
 
 
 if __name__ == "__main__":

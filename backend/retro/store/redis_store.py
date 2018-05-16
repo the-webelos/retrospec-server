@@ -29,13 +29,22 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.sadd(self.BOARD_SET_KEY, board_node.id)
-            pipe.publish(self.BOARD_SET_KEY, board_node.id)
+            pipe.publish(self.BOARD_SET_KEY, json.dumps({"action": "ADD", "board": board_node.id}))
             pipe.hmset(board_node.id, self._get_node_map(board_node))
 
             pipe.execute()
 
     def get_board_ids(self):
         return self.client.smembers(self.BOARD_SET_KEY)
+
+    def remove_board(self, board_id):
+        with self.client.pipeline(True) as pipe:
+            pipe.multi()
+
+            pipe.srem(self.BOARD_SET_KEY, board_id)
+            pipe.publish(self.BOARD_SET_KEY, json.dumps({"action": "DEL", "board": board_id}))
+
+            pipe.execute()
 
     def transaction(self, board_id, func):
         with self.client.pipeline(True) as pipe:
@@ -45,28 +54,29 @@ class RedisStore(Store):
 
                     board_version = json.loads(pipe.hget(board_id, 'version'))['value']
 
-                    update_nodes, remove_nodes = func(RedisStore(client=pipe))
+                    read_nodes, update_nodes, remove_nodes = func(RedisStore(client=pipe))
 
-                    # start transaction
-                    pipe.multi()
+                    if update_nodes or remove_nodes:
+                        # start transaction
+                        pipe.multi()
 
-                    for node in update_nodes:
-                        node.version = board_version + 1
-                        node_dict = self._get_node_map(node)
+                        for node in update_nodes:
+                            node.version = board_version + 1
+                            node_dict = self._get_node_map(node)
 
-                        pipe.hmset(node.id, node_dict)
+                            pipe.hmset(node.id, node_dict)
 
-                        pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
+                            pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
-                        pipe.publish(node.id, json.dumps(node.to_dict()))
+                            pipe.publish(node.id, json.dumps(node.to_dict()))
 
-                    for node in remove_nodes:
-                        pipe.delete(node.id)
-                        pipe.publish(node.id, "DEL")
+                        for node in remove_nodes:
+                            pipe.delete(node.id)
+                            pipe.publish(node.id, "DEL")
 
-                    pipe.execute()
+                        pipe.execute()
 
-                    return update_nodes
+                    return read_nodes, update_nodes, remove_nodes
                 except WatchError:
                     _logger.info("Transaction failed")
 

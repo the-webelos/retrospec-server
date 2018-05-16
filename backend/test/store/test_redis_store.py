@@ -1,12 +1,9 @@
 
-import json
 from functools import partial
-
-import redis
 import unittest
 
 from retro.store.redis_store import RedisStore
-from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
+from retro.chain.node import ColumnHeaderNode, BoardNode
 from helpers import get_redis_container, get_redis_config
 
 
@@ -31,7 +28,7 @@ class TestRedisStore(unittest.TestCase):
 
     def test_transaction(self):
         #column = ColumnHeaderNode(id='column_a', content="ColumnA", parent="root", child=None)
-        node, parent = self.store.transaction('root', partial(self._transaction, {"foo": "ColumnA"}, "root"))
+        _, [node, parent], _ = self.store.transaction('root', partial(self._transaction, {"foo": "ColumnA"}, "root"))
         root = self.store.get_node('root')
 
         self.assertEqual({node.id}, root.children)
@@ -57,4 +54,4 @@ class TestRedisStore(unittest.TestCase):
         node = ColumnHeaderNode(proxy.next_node_id(), node_content, parent=parent_id)
         parent.set_child(node.id)
 
-        return [node, parent], []
+        return [], [node, parent], []

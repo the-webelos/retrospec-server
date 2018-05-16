@@ -36,7 +36,7 @@ class MemStore(Store):
         with self.lock:
             board_version = self.nodes[board_id]['version']
 
-            update_nodes, remove_nodes = func(self)
+            read_nodes, update_nodes, remove_nodes = func(self)
 
             for node in update_nodes:
                 node.version = board_version + 1
@@ -49,4 +49,4 @@ class MemStore(Store):
             for node in remove_nodes:
                 del self.nodes[node.id]
 
-            return update_nodes
+            return read_nodes, update_nodes, remove_nodes

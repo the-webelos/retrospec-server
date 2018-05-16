@@ -28,7 +28,7 @@ def build_blueprint(board_engine):
     def get_board(board_id):
         board_nodes = board_engine.get_board(board_id)
 
-        return make_response_json({"nodes": [node.to_dict() for node in board_nodes.values()]})
+        return make_response_json({"nodes": [node.to_dict() for node in board_nodes]})
 
     @blueprint.route("/api/v1/boards", methods=["POST"])
     def create_board():
@@ -47,8 +47,9 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["DELETE"])
     def delete_board(board_id):
-        # status code is ok
-        pass
+        deleted_nodes = board_engine.delete_board(board_id)
+
+        return "Deleted %s nodes" % len(deleted_nodes)
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes", methods=["POST"])
     def create_node(board_id):
