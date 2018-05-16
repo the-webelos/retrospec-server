@@ -21,6 +21,9 @@ class MemStore(Store):
         self.boards.add(board_node.id)
         self.nodes[board_node.id] = board_node.to_dict()
 
+    def remove_board(self, board_id):
+        self.boards.remove(board_id)
+
     def get_board_ids(self):
         return self.boards
 

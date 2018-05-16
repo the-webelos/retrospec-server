@@ -20,6 +20,8 @@ class BoardEngine(object):
         return board.nodes()
 
     def delete_board(self, board_id):
+        self.store.remove_board(board_id)
+
         board = Board(self.store, board_id)
 
         return board.delete()
