@@ -25,8 +25,14 @@ class RedisStore(Store):
         return self.node_from_dict(node_dict)
 
     def create_board(self, board_node):
-        self.client.hmset(board_node.id, self._get_node_map(board_node))
-        self.client.sadd(self.BOARD_SET_KEY, board_node.id)
+        with self.client.pipeline(True) as pipe:
+            pipe.multi()
+
+            pipe.sadd(self.BOARD_SET_KEY, board_node.id)
+            pipe.publish(self.BOARD_SET_KEY, board_node.id)
+            pipe.hmset(board_node.id, self._get_node_map(board_node))
+
+            pipe.execute()
 
     def get_board_ids(self):
         return self.client.smembers(self.BOARD_SET_KEY)
@@ -52,8 +58,11 @@ class RedisStore(Store):
 
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
+                        pipe.publish(node.id, json.dumps(node.to_dict()))
+
                     for node in remove_nodes:
                         pipe.delete(node.id)
+                        pipe.publish(node.id, "DEL")
 
                     pipe.execute()
 

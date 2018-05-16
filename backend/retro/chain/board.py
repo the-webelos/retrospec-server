@@ -8,6 +8,8 @@ class Board(object):
         self.store = store
         self.board_id = board_id
 
+    def next_node_id(self):
+        return "%s|%s" % (self.board_id, self.store.next_node_id())
     def nodes(self):
         return self._collect_nodes(self.board_id)
 
@@ -35,7 +37,7 @@ class Board(object):
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
         child = None
-        new_node_id = self.store.next_node_id()
+        new_node_id = self.next_node_id()
 
         if not parent.parent:
             # Parent is the top of the chain.  We will insert this as a new leaf node.
