@@ -8,13 +8,13 @@ before_install:
   - cd backend
 
 install:
-  - pip install -r backend/requirements.txt
-  - pip install -r backend/test/requirements.txt
+  - pip install -r requirements.txt
+  - pip install -r test/requirements.txt
 
 before_script:
   - cd backend
 
 script:
-  - python backend/test/chain/test_board.py
-  - python backend/test/flask/test_retro_api.py
-  - python backend/test/store/test_redis_store.py
+  - python test/chain/test_board.py
+  - python test/flask/test_retro_api.py
+  - python test/store/test_redis_store.py
