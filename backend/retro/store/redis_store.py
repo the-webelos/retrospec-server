@@ -71,12 +71,18 @@ class RedisStore(Store):
                             node_dict = self._get_node_map(node)
 
                             pipe.hmset(node.id, node_dict)
-                            pipe.publish(node.id,
-                                         json.dumps({"event_type": "node_update", "event_data": node.to_dict()}))
+
+                        if update_nodes:
+                            pipe.publish(board_id,
+                                         json.dumps({"event_type": "node_update",
+                                                     "event_data": [node.to_dict() for node in update_nodes]}))
 
                         for node in remove_nodes:
                             pipe.delete(node.id)
-                            pipe.publish(node.id, json.dumps({"event_type": "node_del", "event_data": node.id}))
+
+                        if remove_nodes:
+                            pipe.publish(board_id, json.dumps({"event_type": "node_del",
+                                                               "event_data": [node.to_dict() for node in remove_nodes]}))
 
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 

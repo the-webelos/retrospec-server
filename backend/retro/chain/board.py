@@ -34,10 +34,13 @@ class Board(object):
 
         return nodes[0]
 
-    def remove_node(self, node_id):
-        _, nodes, _ = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
+    def remove_node(self, node_id, cascade):
+        if cascade:
+            _, _, nodes = self.store.transaction(self.board_id, partial(self._cascade_remove_nodes, node_id))
+        else:
+            _, _, nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
 
-        return nodes[0]
+        return nodes
 
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
@@ -99,6 +102,15 @@ class Board(object):
 
         update_nodes = [parent, child] if child else [parent]
         return [], update_nodes, [node]
+
+    def _cascade_remove_node(self, node_id, proxy):
+        nodes = self._collect_nodes(proxy, node_id)
+
+        parent = proxy.get_node(nodes[node_id].parent)
+
+        parent.remove_child(node_id)
+
+        return [], [parent], nodes
 
     def _edit_node(self, node_id, operation, proxy):
         node = proxy.get_node(node_id)

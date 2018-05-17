@@ -49,6 +49,6 @@ class BoardEngine(object):
         board = Board(self.store, board_id)
         return board.edit_node(node_id, operation)
 
-    def remove_node(self, board_id, node_id):
+    def remove_node(self, board_id, node_id, cascade=False):
         board = Board(self.store, board_id)
-        return board.remove_node(node_id)
+        return board.remove_node(node_id, cascade)
