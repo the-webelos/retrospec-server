@@ -111,11 +111,6 @@ def ping_pong():
     emit('my_pong')
 
 
-@socketio.on('connect', namespace=namespace)
-def test_connect():
-    emit('my_response', {'data': 'Connected', 'count': 0})
-
-
 @socketio.on('disconnect', namespace=namespace)
 def test_disconnect():
     # get rooms for sid
