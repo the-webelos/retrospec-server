@@ -1,13 +1,14 @@
-language: go
+language: python
 sudo: false
-go:
-  - tip
+python:
+  - "3.6"
+cache: pip
 
-before_install:
-  - go get github.com/mattn/goveralls
+install:
+  - pip install -r backend/requirements.txt
+  - pip install -r backend/test/requirements.txt
 
 script:
-  - go test ./... -v -covermode=count -coverprofile coverage.out
-
-after_success:
-  - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+  - python backend/test/chain/test_board.py
+  - python backend/test/flask/test_retro_api.py
+  - python backend/test/store/test_redis_store.py
