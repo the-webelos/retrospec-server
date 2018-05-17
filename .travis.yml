@@ -11,9 +11,6 @@ install:
   - pip install -r requirements.txt
   - pip install -r test/requirements.txt
 
-before_script:
-  - cd backend
-
 script:
   - python test/chain/test_board.py
   - python test/flask/test_retro_api.py
