@@ -4,9 +4,15 @@ python:
   - "3.6"
 cache: pip
 
+before_install:
+  - cd backend
+
 install:
   - pip install -r backend/requirements.txt
   - pip install -r backend/test/requirements.txt
+
+before_script:
+  - cd backend
 
 script:
   - python backend/test/chain/test_board.py
