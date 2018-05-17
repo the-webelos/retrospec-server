@@ -162,4 +162,4 @@ def test_disconnect():
 
 if __name__ == "__main__":
     cfg_ = Config.from_env()
-    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=True)
+    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=False)
