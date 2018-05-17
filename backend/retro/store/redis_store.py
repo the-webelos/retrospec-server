@@ -29,8 +29,9 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.sadd(self.BOARD_SET_KEY, board_node.id)
-            pipe.publish(self.BOARD_SET_KEY, json.dumps({"action": "ADD", "board": board_node.id}))
+            pipe.publish(self.BOARD_SET_KEY, json.dumps({"event_type": "board_create", "event_data": board_node.id}))
             pipe.hmset(board_node.id, self._get_node_map(board_node))
+            pipe.publish(board_node.id, json.dumps({"event_type": "node_update", "event_data": board_node.to_dict()}))
 
             pipe.execute()
 
@@ -42,7 +43,7 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.srem(self.BOARD_SET_KEY, board_id)
-            pipe.publish(self.BOARD_SET_KEY, json.dumps({"action": "DEL", "board": board_id}))
+            pipe.publish(self.BOARD_SET_KEY, json.dumps({"event_type": "board_del", "event_data": board_id}))
 
             pipe.execute()
 
@@ -63,18 +64,19 @@ class RedisStore(Store):
                         for node in update_nodes:
                             node.version = board_version + 1
 
-                            #update orig version if needed
+                            # update orig version if needed
                             if node.orig_version is None:
                                 node.orig_version = node.version
 
                             node_dict = self._get_node_map(node)
 
                             pipe.hmset(node.id, node_dict)
-                            pipe.publish(node.id, json.dumps(node.to_dict()))
+                            pipe.publish(node.id,
+                                         json.dumps({"event_type": "node_update", "event_data": node.to_dict()}))
 
                         for node in remove_nodes:
                             pipe.delete(node.id)
-                            pipe.publish(node.id, "DEL")
+                            pipe.publish(node.id, json.dumps({"event_type": "node_del", "event_data": node.id}))
 
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
@@ -84,10 +86,11 @@ class RedisStore(Store):
                 except WatchError:
                     _logger.info("Transaction failed")
 
-    def _get_node_map(self, node):
+    @staticmethod
+    def _get_node_map(node):
         node_dict = node.to_dict()
 
-        for k,v in node_dict.items():
+        for k, v in node_dict.items():
             node_dict[k] = json.dumps({'value': v})
 
         return node_dict

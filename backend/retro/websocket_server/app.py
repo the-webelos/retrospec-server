@@ -2,6 +2,7 @@ import eventlet
 eventlet.monkey_patch()
 
 import logging
+import json
 import redis
 from threading import Lock
 from flask import Flask, render_template, session, request
@@ -32,7 +33,6 @@ def buildapp_from_config(cfg):
 cfg_ = Config.from_env()
 app, socketio = buildapp_from_config(cfg_)
 board_engine = BoardEngine(cfg_)
-#threads = {}
 thread_lock = Lock()
 
 
@@ -79,16 +79,16 @@ def join(message):
         raise ValueError("No room provided!")
 
     # Ensure board exists before we create a room for it
-    if not board_engine.has_board(room):
-        raise ValueError("Board '%s' does not exist!" % room)
+#    if not board_engine.has_board(room):
+#        raise ValueError("Board '%s' does not exist!" % room)
 
     with thread_lock:
         # If there's not already a redis subscription to this board, create one
         if room not in socketio.server.manager.rooms.get(namespace, {}):
-            #threads[room] = socketio.start_background_task(subscribe_board, room)
             socketio.start_background_task(subscribe_board, room, socketio)
 
-    join_room(room)
+        join_room(room)
+
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': 'In rooms: ' + ', '.join(rooms()),
@@ -117,22 +117,14 @@ def leave(message):
           'count': session['receive_count']})
 
 
-@socketio.on('close_room', namespace=namespace)
 def close(message):
     room = message['room']
 
-    # Stop the thread. The room is being closed so we don't need the redis subscription anymore
+    # The room is being closed so we don't need the redis subscription anymore
     with thread_lock:
         client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
-        client.publish('%s*' % room, "UNSUBSCRIBE")
-        #thread = threads.get(room)
-        #if thread:
-        #    threads.pop(room, None)
+        client.publish('%s' % room, json.dumps({'event_type': 'unsubscribe', 'event_data': room}))
 
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response', {'data': 'Room ' + room + ' is closing.',
-                         'count': session['receive_count']},
-         room=room)
     close_room(room)
 
 
@@ -164,6 +156,7 @@ def test_connect():
 
 @socketio.on('disconnect', namespace=namespace)
 def test_disconnect():
+    # get rooms for sid
     print('Client disconnected', request.sid)
 
 

@@ -2,7 +2,6 @@ import logging
 import redis
 from retro.websocket_server import namespace
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -12,14 +11,18 @@ def subscribe_board(board_id, socketio):
     channel = '%s*' % board_id
     p.psubscribe(channel)
 
-    for event in p.listen():
-        if event['data'] == 'UNSUBSCRIBE':
-            p.unsubscribe(channel)
-            _logger.info("Unsubscribed from channel '%s'.", channel)
-            break
-        elif event['type'] == 'pmessage':
-            data = {"data": event["data"], "count": 1}
-            socketio.emit("my_response", data, namespace=namespace, room=board_id)
-            print("%s" % event['data'])
+    for item in p.listen():
+        if item['type'] == 'pmessage':
+            event = item['data']
+            event_type = event.get('event_type')
+            if event_type in ('node_create', 'node_del'):
+                socketio.emit(event_type, event['event_data'], namespace=namespace, room=board_id)
+            elif event_type == 'board_unsubscribe' or event_type == 'board_del':
+                p.unsubscribe(channel)
+            elif event_type == 'board_create':
+                # nothing for websocket to do
+                pass
+            else:
+                _logger.warning("Unknown event type for %s: %s", board_id, event_type)
 
     print("Subscription to channel '%s' terminated" % channel)
