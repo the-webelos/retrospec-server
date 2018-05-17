@@ -47,19 +47,22 @@ class Board(object):
         child = None
         new_node_id = self.next_node_id()
 
-        if not parent.parent:
-            # Parent is the top of the chain.  We will insert this as a new leaf node.
-            node = ColumnHeaderNode(new_node_id, node_content, parent=parent_id)
-            parent.set_child(node.id)
-        else:
+        column_header_parent = self._find_first_parent(proxy, parent_id, ColumnHeaderNode.NODE_TYPE)
+
+        if column_header_parent:
             if parent.child:
                 child = proxy.get_node(parent.child)
             # we will insert this between parent and child nodes
-            node = ContentNode(new_node_id, node_content, parent=parent_id, child=parent.child)
+            node = ContentNode(new_node_id, node_content, parent=parent_id, child=parent.child,
+                               column_header=column_header_parent.id)
 
             parent.set_child(node.id)
             if child:
                 child.parent = node.id
+        else:
+            # Parent is the top of the chain.  We will insert this as a new leaf node.
+            node = ColumnHeaderNode(new_node_id, node_content, parent=parent_id)
+            parent.set_child(node.id)
 
         update_nodes = [parent, node, child] if child else [parent, node]
 
@@ -134,3 +137,14 @@ class Board(object):
                 collected.update(self._collect_nodes(proxy, node_id, root_id))
 
         return collected
+
+    def _find_first_parent(self, proxy, node_id, node_type):
+        node = proxy.get_node(node_id)
+
+        if node.NODE_TYPE == node_type:
+            return node
+
+        if node.parent:
+            return self._find_first_parent(proxy, node.parent, node_type)
+        else:
+            return None

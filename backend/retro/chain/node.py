@@ -58,11 +58,11 @@ class BoardNode(Node):
         return {"children": list(self.children)}
 
 
-class ContentNode(Node):
-    NODE_TYPE = 'Content'
+class ParentChildNode(Node):
+    NODE_TYPE = 'ParentChild'
 
     def __init__(self, id, content=None, version=1, orig_version=None, parent=None, child=None):
-        super(ContentNode, self).__init__(id, content, version, orig_version)
+        super(ParentChildNode, self).__init__(id, content, version, orig_version)
         self.parent=parent
         self.child=child
 
@@ -84,24 +84,38 @@ class ContentNode(Node):
             return False
 
         return other.id == self.id and other.content == self.content and other.version == self.version \
-                and other.parent == self.parent and other.child == self.child
+               and other.parent == self.parent and other.child == self.child
 
     def _dict_items(self):
         return {"parent": self.parent, "child": self.child}
 
 
-class ColumnHeaderNode(ContentNode):
-    NODE_TYPE = 'ColumnHeader'
+class ContentNode(ParentChildNode):
+    NODE_TYPE = 'Content'
 
-    def __init__(self, id, content=None, version=1, orig_version=None, parent=None, child=None):
-        super(ColumnHeaderNode, self).__init__(id, content, version, orig_version, parent, child)
+    def __init__(self, id, content=None, version=1, orig_version=None, parent=None, child=None, column_header=None):
+        super(ContentNode, self).__init__(id, content, version, orig_version, parent, child)
+        self.column_header = column_header
+
+    def __eq__(self, other):
+        if not isinstance(other, ContentNode):
+            return False
+
+        return other.id == self.id and other.content == self.content and other.version == self.version \
+                and other.parent == self.parent and other.child == self.child \
+                and other.column_header == self.column_header
+
+    def _dict_items(self):
+        return {"parent": self.parent, "child": self.child, "column_header": self.column_header}
+
+
+class ColumnHeaderNode(ParentChildNode):
+    NODE_TYPE = 'ColumnHeader'
 
     def __eq__(self, other):
         if not isinstance(other, ColumnHeaderNode):
             return False
 
         return other.id == self.id and other.content == self.content and other.version == self.version \
-                and other.parent == self.parent and other.child == self.child
+               and other.parent == self.parent and other.child == self.child
 
-    def _dict_items(self):
-        return {"parent": self.parent, "child": self.child}

@@ -34,10 +34,11 @@ def build_blueprint(board_engine):
     def create_board():
         args = request.json or {}
         name = args.get("name")
+        template = args.get("template")
         if not name:
             return make_response("No board name provided!", 400)
 
-        board_node = board_engine.create_board(name)
+        board_node = board_engine.create_board(name, template)
 
         return make_response_json(board_node.to_dict())
 

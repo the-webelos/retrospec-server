@@ -8,7 +8,7 @@ class BoardEngine(object):
         self.config = config
         self.store = store if store else get_store(config)
 
-    def create_board(self, name):
+    def create_board(self, name, template=None):
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
         self.store.create_board(board_node)
 

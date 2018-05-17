@@ -11,12 +11,12 @@ class TestBoard(unittest.TestCase):
         default_nodes = {"root": BoardNode("root", {"test": "RootContent"}, 1, None, {'column_a', 'column_b'}).to_dict(),
                          "column_a": ColumnHeaderNode("column_a", {"test": "ColumnA"}, 1, None, "root", "node_1").to_dict(),
                          "column_b": ColumnHeaderNode("column_b", {"test": "ColumnB"}, 1, None, "root", "node_5").to_dict(),
-                         "node_1": ContentNode("node_1", {"test": "Node1"}, 1, None, "column_a", "node_2").to_dict(),
-                         "node_2": ContentNode("node_2", {"test": "Node2"}, 1, None, "node_1", "node_3").to_dict(),
-                         "node_3": ContentNode("node_3", {"test": "Node3"}, 1, None, "node_2", "node_4").to_dict(),
-                         "node_4": ContentNode("node_4", {"test": "Node4"}, 1, None, "node_3").to_dict(),
-                         "node_5": ContentNode("node_5", {"test": "Node5"}, 1, None, "column_b", "node_6").to_dict(),
-                         "node_6": ContentNode("node_6", {"test": "Node6"}, 1, None, "node_5").to_dict()}
+                         "node_1": ContentNode("node_1", {"test": "Node1"}, 1, None, "column_a", "node_2", "column_a").to_dict(),
+                         "node_2": ContentNode("node_2", {"test": "Node2"}, 1, None, "node_1", "node_3", "column_a").to_dict(),
+                         "node_3": ContentNode("node_3", {"test": "Node3"}, 1, None, "node_2", "node_4", "column_a").to_dict(),
+                         "node_4": ContentNode("node_4", {"test": "Node4"}, 1, None, "node_3", None, "column_a").to_dict(),
+                         "node_5": ContentNode("node_5", {"test": "Node5"}, 1, None, "column_b", "node_6", "column_b").to_dict(),
+                         "node_6": ContentNode("node_6", {"test": "Node6"}, 1, None, "node_5", None, "column_b").to_dict()}
         self.store = MemStore(default_nodes)
 
     def test_populate_chain(self):
@@ -30,25 +30,31 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ColumnHeaderNode(id='column_a', content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
                          chain.get_node('column_a'))
 
-        self.assertEqual(ContentNode(id='node_1', content={"test": "Node1"}, version=1, parent="column_a", child="node_2"),
+        self.assertEqual(ContentNode(id='node_1', content={"test": "Node1"}, version=1, parent="column_a",
+                                     child="node_2", column_header="column_a"),
                          chain.get_node('node_1'))
 
-        self.assertEqual(ContentNode(id='node_2', content={"test": "Node2"}, version=1, parent="node_1", child="node_3"),
+        self.assertEqual(ContentNode(id='node_2', content={"test": "Node2"}, version=1, parent="node_1",
+                                     child="node_3", column_header="column_a"),
                          chain.get_node('node_2'))
 
-        self.assertEqual(ContentNode(id='node_3', content={"test": "Node3"}, version=1, parent="node_2", child="node_4"),
+        self.assertEqual(ContentNode(id='node_3', content={"test": "Node3"}, version=1, parent="node_2",
+                                     child="node_4", column_header="column_a"),
                          chain.get_node('node_3'))
 
-        self.assertEqual(ContentNode(id='node_4', content={"test": "Node4"}, version=1, parent="node_3", child=None),
+        self.assertEqual(ContentNode(id='node_4', content={"test": "Node4"}, version=1, parent="node_3",
+                                     child=None, column_header="column_a"),
                          chain.get_node('node_4'))
 
         self.assertEqual(ColumnHeaderNode(id='column_b', content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
                          chain.get_node('column_b'))
 
-        self.assertEqual(ContentNode(id='node_5', content={"test": "Node5"}, version=1, parent="column_b", child="node_6"),
+        self.assertEqual(ContentNode(id='node_5', content={"test": "Node5"}, version=1, parent="column_b",
+                                     child="node_6", column_header="column_b"),
                          chain.get_node('node_5'))
 
-        self.assertEqual(ContentNode(id='node_6', content={"test": "Node6"}, version=1, parent="node_5", child=None),
+        self.assertEqual(ContentNode(id='node_6', content={"test": "Node6"}, version=1, parent="node_5",
+                                     child=None, column_header="column_b"),
                          chain.get_node('node_6'))
 
     def test_add_node_to_root(self):
@@ -58,8 +64,8 @@ class TestBoard(unittest.TestCase):
 
         self.assertEqual({'column_a', 'column_b', node.id},
                          self.store.get_node('root').children)
-        self.assertEqual(node,
-                         self.store.get_node(node.id))
+        self.assertEqual(node.to_dict(),
+                         self.store.get_node(node.id).to_dict())
 
     def test_add_node_to_column_end(self):
         chain = Board(self.store, 'root')
