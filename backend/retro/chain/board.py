@@ -103,14 +103,14 @@ class Board(object):
         update_nodes = [parent, child] if child else [parent]
         return [], update_nodes, [node]
 
-    def _cascade_remove_node(self, node_id, proxy):
-        nodes = self._collect_nodes(proxy, node_id)
-
-        parent = proxy.get_node(nodes[node_id].parent)
-
+    def _cascade_remove_nodes(self, node_id, proxy):
+        node = proxy.get_node(node_id)
+        parent = proxy.get_node(node.parent)
         parent.remove_child(node_id)
 
-        return [], [parent], nodes
+        nodes = self._collect_nodes(proxy, node_id, parent.id)
+
+        return [], [parent], nodes.values()
 
     def _edit_node(self, node_id, operation, proxy):
         node = proxy.get_node(node_id)
