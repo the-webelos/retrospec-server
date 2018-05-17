@@ -45,7 +45,7 @@ def error_handler(ex):
 
 
 @socketio.on('subscribe', namespace=namespace)
-def join(message):
+def subscribe(message):
     board_id = message.get("board_id")
     if not board_id:
         raise ValueError("No board provided!")
@@ -66,7 +66,7 @@ def join(message):
 
 
 @socketio.on('unsubscribe', namespace=namespace)
-def leave(message):
+def unsubscribe(message):
     board_id = message['board_id']
     leave_room(board_id)
 

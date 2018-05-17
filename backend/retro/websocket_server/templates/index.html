@@ -30,12 +30,12 @@
             // to the client. The data is then displayed in the "Received"
             // section of the page.
             socket.on('connect_response', logWebsocketMsg);
+            socket.on("disconnect_response", logWebsocketMsg);
 
             function logWebsocketMsg(msg) {
                 $('#log').append('<br>' + $('<div/>').text('Received #' + msg.data).html());
             }
 
-            socket.on();
             // Interval function that tests message latency by sending a "ping"
             // message. The server then responds with a "pong" message and the
             // round trip time is measured.
