@@ -2,6 +2,7 @@ FROM tiangolo/uwsgi-nginx-flask:python3.6
 
 COPY ./retro /app/retro
 COPY ./uwsgi.ini /app
+COPY ./conf /app/conf
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip

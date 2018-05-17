@@ -1,6 +1,11 @@
+import json
+import logging
+
 from retro.chain.board import Board
 from retro.chain.node import BoardNode
 from retro.utils import get_store
+
+_logger = logging.getLogger(__name__)
 
 
 class BoardEngine(object):
@@ -8,11 +13,19 @@ class BoardEngine(object):
         self.config = config
         self.store = store if store else get_store(config)
 
+        self.templates = self._build_templates(self.config.template_config)
+
     def create_board(self, name, template=None):
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
         self.store.create_board(board_node)
 
-        return board_node
+        nodes = [board_node]
+        template_def = self.templates[template] if template else {'columns': []}
+
+        for column in template_def['columns']:
+            nodes.append(self.add_node(board_node.id, board_node.id, {'name': column}))
+
+        return nodes
 
     def get_board(self, board_id):
         board = Board(self.store, board_id)
@@ -58,3 +71,23 @@ class BoardEngine(object):
 
     def unsubscribe_board(self, board_id):
         self.store.stop_listener(board_id)
+
+    def _build_templates(self, template_config):
+        templates = {}
+        try:
+            with open(template_config) as f:
+                for line in f:
+                    line = line.strip(' ')
+                    if line.startswith('#'):
+                        continue
+
+                    parts = line.partition('=')
+                    try:
+                        templates[parts[0]] = json.loads(parts[2])
+                    except:
+                        pass
+        except:
+            _logger.exception("Error parsing templates")
+
+        return templates
+

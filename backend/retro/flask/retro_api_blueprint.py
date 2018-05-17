@@ -38,9 +38,9 @@ def build_blueprint(board_engine):
         if not name:
             return make_response("No board name provided!", 400)
 
-        board_node = board_engine.create_board(name, template)
+        board_nodes = board_engine.create_board(name, template)
 
-        return make_response_json(board_node.to_dict())
+        return make_response_json({"nodes": [node.to_dict() for node in board_nodes]})
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["PUT"])
     def update_board(board_id):

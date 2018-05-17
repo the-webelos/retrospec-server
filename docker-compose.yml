@@ -10,6 +10,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - TEMPLATE_CONFIG=/app/conf/templates.cfg
   redis:
     image: redis:4
     ports:
