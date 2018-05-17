@@ -36,17 +36,6 @@ board_engine = BoardEngine(cfg_)
 thread_lock = Lock()
 
 
-def background_thread():
-    """Example of how to send server generated events to clients."""
-    count = 0
-    while True:
-        socketio.sleep(10)
-        count += 1
-        socketio.emit('my_response',
-                      {'data': 'Server generated event', 'count': count},
-                      namespace=namespace)
-
-
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
@@ -57,52 +46,35 @@ def error_handler(ex):
     _logger.error(ex)
 
 
-@socketio.on('my_event', namespace=namespace)
-def test_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']})
-
-
-@socketio.on('my_broadcast_event', namespace=namespace)
-def test_broadcast_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']},
-         broadcast=True)
-
-
-@socketio.on('join', namespace=namespace)
+@socketio.on('subscribe', namespace=namespace)
 def join(message):
-    room = message.get("room")
-    if not room:
-        raise ValueError("No room provided!")
+    board_id = message.get("board_id")
+    if not board_id:
+        raise ValueError("No board provided!")
 
     # Ensure board exists before we create a room for it
-#    if not board_engine.has_board(room):
-#        raise ValueError("Board '%s' does not exist!" % room)
+#    if not board_engine.has_board(board_id):
+#        raise ValueError("Board '%s' does not exist!" % board_id)
 
     with thread_lock:
         # If there's not already a redis subscription to this board, create one
-        if room not in socketio.server.manager.rooms.get(namespace, {}):
-            socketio.start_background_task(subscribe_board, room, socketio)
+        if board_id not in socketio.server.manager.rooms.get(namespace, {}):
+            socketio.start_background_task(subscribe_board, board_id, socketio)
 
-        join_room(room)
+        join_room(board_id)
 
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'In rooms: ' + ', '.join(rooms()),
-          'count': session['receive_count']})
+    emit('subscribe_response',
+         {'board_id': board_id})
 
 
-@socketio.on('leave', namespace=namespace)
+@socketio.on('unsubscribe', namespace=namespace)
 def leave(message):
-    room = message['room']
-    leave_room(room)
+    board_id = message['board_id']
+    leave_room(board_id)
 
     try:
         # Check if anyone is still in the room
-        room_empty = False if list(socketio.server.manager.get_participants(namespace, room)) else True
+        room_empty = False if list(socketio.server.manager.get_participants(namespace, board_id)) else True
     except KeyError:
         # This will raise a KeyError if there are no participants in the room
         room_empty = True
@@ -111,29 +83,19 @@ def leave(message):
     if room_empty:
         close(message)
 
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'In rooms: ' + ', '.join(rooms()),
-          'count': session['receive_count']})
+    emit('unsubscribe_response',
+         {'board_id': board_id})
 
 
 def close(message):
-    room = message['room']
+    board_id = message['board_id']
 
     # The room is being closed so we don't need the redis subscription anymore
     with thread_lock:
         client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
-        client.publish('%s' % room, json.dumps({'event_type': 'unsubscribe', 'event_data': room}))
+        client.publish('%s' % board_id, json.dumps({'event_type': 'unsubscribe', 'event_data': board_id}))
 
-    close_room(room)
-
-
-@socketio.on('my_room_event', namespace=namespace)
-def send_room_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']},
-         room=message['room'])
+    close_room(board_id)
 
 
 @socketio.on('disconnect_request', namespace=namespace)
