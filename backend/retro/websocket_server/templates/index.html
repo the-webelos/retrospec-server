@@ -31,9 +31,17 @@
             // section of the page.
             socket.on('connect_response', logWebsocketMsg);
             socket.on("disconnect_response", logWebsocketMsg);
+            socket.on("subscribe_response", logSubscribeMsg);
+            socket.on("unsubscribe_response", logUnsubscribeMsg);
 
             function logWebsocketMsg(msg) {
-                $('#log').append('<br>' + $('<div/>').text('Received #' + msg.data).html());
+                $('#log').append('<br>' + $('<div/>').text('Received event: ' + msg.data).html());
+            }
+            function logSubscribeMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text('Subscribed to board ' + msg.board_id + "'").html());
+            }
+            function logUnsubscribeMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text('Unsubscribed from board ' + msg.board_id + "'").html());
             }
 
             // Interval function that tests message latency by sending a "ping"
@@ -60,30 +68,30 @@
             // Handlers for the different forms in the page.
             // These accept data from the user and send it to the server in a
             // variety of ways
-            $('form#emit').submit(function(event) {
-                socket.emit('my_event', {data: $('#emit_data').val()});
+            // $('form#emit').submit(function(event) {
+            //    socket.emit('my_event', {data: $('#emit_data').val()});
+            //    return false;
+            //});
+            //$('form#broadcast').submit(function(event) {
+            //    socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
+            //    return false;
+            //});
+            $('form#subscribe').submit(function(event) {
+                socket.emit('subscribe', {board_id: $('#join_room').val()});
                 return false;
             });
-            $('form#broadcast').submit(function(event) {
-                socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
+            $('form#unsubscribe').submit(function(event) {
+                socket.emit('unsubscribe', {board_id: $('#leave_room').val()});
                 return false;
             });
-            $('form#join').submit(function(event) {
-                socket.emit('join', {room: $('#join_room').val()});
-                return false;
-            });
-            $('form#leave').submit(function(event) {
-                socket.emit('leave', {room: $('#leave_room').val()});
-                return false;
-            });
-            $('form#send_room').submit(function(event) {
-                socket.emit('my_room_event', {room: $('#room_name').val(), data: $('#room_data').val()});
-                return false;
-            });
-            $('form#close').submit(function(event) {
-                socket.emit('close_room', {room: $('#close_room').val()});
-                return false;
-            });
+            //$('form#send_room').submit(function(event) {
+            //    socket.emit('my_room_event', {room: $('#room_name').val(), data: $('#room_data').val()});
+            //    return false;
+            //});
+            //$('form#close').submit(function(event) {
+            //    socket.emit('close_room', {room: $('#close_room').val()});
+            //    return false;
+            //});
             $('form#disconnect').submit(function(event) {
                 socket.emit('disconnect_request');
                 return false;
@@ -96,7 +104,7 @@
 <p>Async mode is: <b>{{ async_mode }}</b></p>
 <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
 <h2>Send:</h2>
-<form id="emit" method="POST" action='#'>
+<!-- <form id="emit" method="POST" action='#'>
     <input type="text" name="emit_data" id="emit_data" placeholder="Message">
     <input type="submit" value="Echo">
 </form>
@@ -104,14 +112,16 @@
     <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Message">
     <input type="submit" value="Broadcast">
 </form>
-<form id="join" method="POST" action='#'>
+-->
+<form id="subscribe" method="POST" action='#'>
     <input type="text" name="join_room" id="join_room" placeholder="Room Name">
     <input type="submit" value="Join Room">
 </form>
-<form id="leave" method="POST" action='#'>
+<form id="unsubscribe" method="POST" action='#'>
     <input type="text" name="leave_room" id="leave_room" placeholder="Room Name">
     <input type="submit" value="Leave Room">
 </form>
+<!--
 <form id="send_room" method="POST" action='#'>
     <input type="text" name="room_name" id="room_name" placeholder="Room Name">
     <input type="text" name="room_data" id="room_data" placeholder="Message">
@@ -121,6 +131,7 @@
     <input type="text" name="close_room" id="close_room" placeholder="Room Name">
     <input type="submit" value="Close Room">
 </form>
+-->
 <form id="disconnect" method="POST" action="#">
     <input type="submit" value="Disconnect">
 </form>

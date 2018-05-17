@@ -52,17 +52,17 @@ class RedisStore(Store):
         channel = '%s*' % board_id
         p.psubscribe(channel)
 
-        for item in p.listen():
+        for event in p.listen():
             try:
-                _logger.warning("%s", item)
-                if item['type'] == 'pmessage' and item['pattern'] is not None:
-                    if not message_cb(item, board_id):
+                _logger.debug("Board listener received event '%s'", event)
+                if event['type'] == 'pmessage' and event['pattern'] is not None:
+                    if not message_cb(event, board_id):
                         break
             except:
                 _logger.exception("Error during subscription processing.")
 
         p.unsubscribe(channel)
-        print("Subscription to channel '%s' terminated" % channel)
+        _logger.info("Subscription to channel '%s' terminated" % channel)
 
     def stop_listener(self, board_id):
         self.client.publish('%s' % board_id, json.dumps({'event_type': 'lonely_board', 'event_data': board_id}))

@@ -9,6 +9,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, disconnect
 from retro.engine.board_engine import BoardEngine
 from retro.utils.config import Config
+from retro.utils.retro_logging import setup_basic_logging
 from retro.websocket_server import namespace
 
 
@@ -20,6 +21,7 @@ def buildapp_from_config(cfg):
     # different async modes, or leave it set to None for the application to choose
     # the best option based on installed packages.
     async_mode = "eventlet"
+    setup_basic_logging(level=logging.WARNING)
 
     _app = Flask(__name__)
     _app.config['SECRET_KEY'] = cfg.flask_secret
@@ -61,6 +63,7 @@ def subscribe(message):
 
         join_room(board_id)
 
+    _logger.warning("Subscribed to board '%s'. [USER=%s]" % (board_id, request.sid))
     emit('subscribe_response',
          {'board_id': board_id})
 
