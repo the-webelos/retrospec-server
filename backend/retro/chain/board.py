@@ -1,5 +1,4 @@
 from functools import partial
-from retro.chain.exceptions import UnsupportedOperationError
 from retro.chain.node import ColumnHeaderNode, ContentNode
 
 

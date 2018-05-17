@@ -5,6 +5,7 @@ import redis
 
 client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
 
+
 def subscribe_board(board_id):
     p = client.pubsub()
     p.psubscribe('%s*' % board_id)
