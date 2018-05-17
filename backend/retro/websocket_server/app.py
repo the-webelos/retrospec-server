@@ -93,7 +93,7 @@ def close(message):
     # The room is being closed so we don't need the redis subscription anymore
     with thread_lock:
         client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
-        client.publish('%s' % board_id, json.dumps({'event_type': 'unsubscribe', 'event_data': board_id}))
+        client.publish('%s' % board_id, json.dumps({'event_type': 'store_unsubscribe', 'event_data': board_id}))
 
     close_room(board_id)
 

@@ -88,8 +88,10 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["DELETE"])
     def delete_node(board_id, node_id):
-        node = board_engine.remove_node(board_id, node_id)
+        args = request.json or {}
+        cascade = args.get("cascade", False)
+        nodes = board_engine.remove_node(board_id, node_id, cascade)
 
-        return make_response_json(node.to_dict())
+        return make_response_json({"deleted": [node.to_dict() for node in nodes]})
 
     return blueprint

@@ -19,7 +19,7 @@ def subscribe_board(board_id, socketio):
                 event = json.loads(item['data'])
                 event_type = event.get('event_type')
                 if event_type in ('node_update', 'node_del'):
-                    socketio.emit(event_type, event['event_data'], namespace=namespace, room=board_id)
+                    socketio.emit(event_type, {"nodes": event['event_data']}, namespace=namespace, room=board_id)
                 elif event_type == 'board_unsubscribe' or event_type == 'board_del':
                     p.unsubscribe(channel)
                 elif event_type == 'board_create':

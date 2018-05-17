@@ -146,7 +146,20 @@ class TestBoard(unittest.TestCase):
     def test_remove_node(self):
         chain = Board(self.store, 'root')
 
-        chain.remove_node("node_2")
+        chain.remove_node("node_2", False)
 
         self.assertEqual("node_3", self.store.get_node("node_1").child)
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
+
+    def test_remove_node_cascade(self):
+        chain = Board(self.store, 'root')
+
+        chain.remove_node("node_2", True)
+
+        self.assertEqual(None, self.store.get_node("node_1").child)
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_2")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_3")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_4")
