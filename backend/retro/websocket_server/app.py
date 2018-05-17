@@ -1,15 +1,16 @@
-#!/usr/bin/env python
 import eventlet
 eventlet.monkey_patch()
 
-import flask
 import logging
 import redis
 from threading import Lock
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
+from retro.engine.board_engine import BoardEngine
 from retro.utils.config import Config
+from retro.websocket_server import namespace
+from retro.websocket_server.redis_listener import subscribe_board
 
 
 _logger = logging.getLogger(__name__)
@@ -28,10 +29,11 @@ def buildapp_from_config(cfg):
     return _app, _socket_io
 
 
-app, socketio = buildapp_from_config(Config.from_env())
-threads = {}
+cfg_ = Config.from_env()
+app, socketio = buildapp_from_config(cfg_)
+board_engine = BoardEngine(cfg_)
+#threads = {}
 thread_lock = Lock()
-namespace = "/websocket"
 
 
 def background_thread():
@@ -76,13 +78,15 @@ def join(message):
     if not room:
         raise ValueError("No room provided!")
 
-    # TODO ensure board exists in redis
+    # Ensure board exists before we create a room for it
+    if not board_engine.has_board(room):
+        raise ValueError("Board '%s' does not exist!" % room)
 
-    _socketio = flask.current_app.extensions['socketio']
     with thread_lock:
-        if room not in _socketio.server.manager.rooms.get(namespace, {}):
-            # subscribe to board in redis
-            threads[room] = socketio.start_background_task(subscribe_board, room)
+        # If there's not already a redis subscription to this board, create one
+        if room not in socketio.server.manager.rooms.get(namespace, {}):
+            #threads[room] = socketio.start_background_task(subscribe_board, room)
+            socketio.start_background_task(subscribe_board, room, socketio)
 
     join_room(room)
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -93,7 +97,20 @@ def join(message):
 
 @socketio.on('leave', namespace=namespace)
 def leave(message):
-    leave_room(message['room'])
+    room = message['room']
+    leave_room(room)
+
+    try:
+        # Check if anyone is still in the room
+        room_empty = False if list(socketio.server.manager.get_participants(namespace, room)) else True
+    except KeyError:
+        # This will raise a KeyError if there are no participants in the room
+        room_empty = True
+
+    # If room is empty, close it down
+    if room_empty:
+        close(message)
+
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': 'In rooms: ' + ', '.join(rooms()),
@@ -102,11 +119,21 @@ def leave(message):
 
 @socketio.on('close_room', namespace=namespace)
 def close(message):
+    room = message['room']
+
+    # Stop the thread. The room is being closed so we don't need the redis subscription anymore
+    with thread_lock:
+        client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
+        client.publish('%s*' % room, "UNSUBSCRIBE")
+        #thread = threads.get(room)
+        #if thread:
+        #    threads.pop(room, None)
+
     session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response', {'data': 'Room ' + message['room'] + ' is closing.',
+    emit('my_response', {'data': 'Room ' + room + ' is closing.',
                          'count': session['receive_count']},
-         room=message['room'])
-    close_room(message['room'])
+         room=room)
+    close_room(room)
 
 
 @socketio.on('my_room_event', namespace=namespace)
@@ -138,17 +165,6 @@ def test_connect():
 @socketio.on('disconnect', namespace=namespace)
 def test_disconnect():
     print('Client disconnected', request.sid)
-
-
-def subscribe_board(board_id):
-    client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
-    p = client.pubsub()
-    p.psubscribe('%s*' % board_id)
-
-    for event in p.listen():
-        if event['type'] == 'pmessage':
-            socketio.emit("node_event", event["data"], namespace=namespace)
-            print("%s" % event['data'])
 
 
 if __name__ == "__main__":

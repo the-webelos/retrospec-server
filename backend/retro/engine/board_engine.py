@@ -19,6 +19,9 @@ class BoardEngine(object):
 
         return board.nodes()
 
+    def has_board(self, board_id):
+        return board_id in self.store.get_board_ids()
+
     def delete_board(self, board_id):
         self.store.remove_board(board_id)
 
