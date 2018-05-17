@@ -35,6 +35,12 @@ class MemStore(Store):
 
         return board_ids
 
+    def board_update_listener(self, board_id, message_cb=lambda *x: True):
+        pass
+
+    def stop_listener(self, board_id):
+        pass
+
     def transaction(self, board_id, func):
         with self.lock:
             board_version = self.nodes[board_id]['version']

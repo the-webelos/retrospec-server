@@ -3,15 +3,13 @@ eventlet.monkey_patch()
 
 import logging
 import json
-import redis
 from threading import Lock
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, rooms, disconnect
+    close_room, disconnect
 from retro.engine.board_engine import BoardEngine
 from retro.utils.config import Config
 from retro.websocket_server import namespace
-from retro.websocket_server.redis_listener import subscribe_board
 
 
 _logger = logging.getLogger(__name__)
@@ -59,7 +57,7 @@ def join(message):
     with thread_lock:
         # If there's not already a redis subscription to this board, create one
         if board_id not in socketio.server.manager.rooms.get(namespace, {}):
-            socketio.start_background_task(subscribe_board, board_id, socketio)
+            socketio.start_background_task(board_engine.subscribe_board, board_id, message_cb)
 
         join_room(board_id)
 
@@ -92,17 +90,14 @@ def close(message):
 
     # The room is being closed so we don't need the redis subscription anymore
     with thread_lock:
-        client = redis.StrictRedis(host='localhost', port=6379, encoding='utf-8', decode_responses=True)
-        client.publish('%s' % board_id, json.dumps({'event_type': 'store_unsubscribe', 'event_data': board_id}))
+        board_engine.unsubscribe_board(board_id)
 
     close_room(board_id)
 
 
 @socketio.on('disconnect_request', namespace=namespace)
 def disconnect_request():
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'Disconnected!', 'count': session['receive_count']})
+    emit('disconnect_response', {'data': 'Disconnected!'})
     disconnect()
 
 
@@ -111,12 +106,35 @@ def ping_pong():
     emit('my_pong')
 
 
+@socketio.on('connect', namespace=namespace)
+def test_connect():
+    emit('connect_response', {'data': 'Connected'})
+
+
 @socketio.on('disconnect', namespace=namespace)
 def test_disconnect():
     # get rooms for sid
-    print('Client disconnected', request.sid)
+    _logger.info('Client disconnected', request.sid)
+
+
+def message_cb(message, board_id):
+    should_keep_listening = True
+    event = json.loads(message['data'])
+    event_type = event.get('event_type')
+
+    if event_type in ('node_update', 'node_del'):
+        socketio.emit(event_type, {"nodes": event['event_data']}, namespace=namespace, room=board_id)
+    elif event_type == 'lonely_board' or event_type == 'board_del':
+        should_keep_listening = False
+    elif event_type == 'board_create':
+        # nothing for websocket to do
+        pass
+    else:
+        _logger.warning("Unknown event type for %s: %s", board_id, event_type)
+
+    return should_keep_listening
 
 
 if __name__ == "__main__":
     cfg_ = Config.from_env()
-    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=False)
+    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=True)

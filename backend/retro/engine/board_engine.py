@@ -52,3 +52,9 @@ class BoardEngine(object):
     def remove_node(self, board_id, node_id, cascade=False):
         board = Board(self.store, board_id)
         return board.remove_node(node_id, cascade)
+
+    def subscribe_board(self, board_id, message_cb=lambda x: x):
+        self.store.subscribe_board(board_id, message_cb=message_cb)
+
+    def unsubscribe_board(self, board_id):
+        self.store.stop_listener(board_id)

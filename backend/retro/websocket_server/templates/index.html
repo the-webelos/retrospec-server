@@ -19,16 +19,23 @@
             // Event handler for new connections.
             // The callback function is invoked when a connection with the
             // server is established.
+
             socket.on('connect', function() {
-                socket.emit('my_event', {data: 'I\'m connected!'});
+                console.log("I'm connected!")
+                //socket.emit('my_event', {data: 'I\'m connected!'});
             });
+
             // Event handler for server sent data.
             // The callback function is invoked whenever the server emits data
             // to the client. The data is then displayed in the "Received"
             // section of the page.
-            socket.on('my_response', function(msg) {
-                $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
-            });
+            socket.on('connect_response', logWebsocketMsg);
+
+            function logWebsocketMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text('Received #' + msg.data).html());
+            }
+
+            socket.on();
             // Interval function that tests message latency by sending a "ping"
             // message. The server then responds with a "pong" message and the
             // round trip time is measured.

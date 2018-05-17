@@ -14,9 +14,6 @@ class Store(object):
     def transaction(self, board_id, func):
         raise NotImplementedError
 
-#    def keys(self, board):
-#        raise NotImplementedError
-
     def create_board(self, board_node):
         raise NotImplementedError
 
@@ -31,3 +28,9 @@ class Store(object):
         d = node_dict.copy()
         d.pop('type')
         return cls(**d)
+
+    def board_update_listener(self, board_id, message_cb=None):
+        raise NotImplementedError
+
+    def stop_listener(self, board_id):
+        raise NotImplementedError
