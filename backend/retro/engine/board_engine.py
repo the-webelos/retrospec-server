@@ -74,20 +74,22 @@ class BoardEngine(object):
 
     def _build_templates(self, template_config):
         templates = {}
-        try:
-            with open(template_config) as f:
-                for line in f:
-                    line = line.strip(' ')
-                    if line.startswith('#'):
-                        continue
 
-                    parts = line.partition('=')
-                    try:
-                        templates[parts[0]] = json.loads(parts[2])
-                    except:
-                        pass
-        except:
-            _logger.exception("Error parsing templates")
+        if template_config:
+            try:
+                with open(template_config) as f:
+                    for line in f:
+                        line = line.strip(' ')
+                        if line.startswith('#'):
+                            continue
+
+                        parts = line.partition('=')
+                        try:
+                            templates[parts[0]] = json.loads(parts[2])
+                        except:
+                            pass
+            except:
+                _logger.exception("Error parsing templates")
 
         return templates
 

@@ -1,8 +1,10 @@
 
 version: '3'
 services:
-  web:
-    build: ./backend
+  api:
+    build:
+        context: ./backend/
+        dockerfile: Dockerfile.api
     links:
       - redis
     ports:
@@ -11,7 +13,18 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - TEMPLATE_CONFIG=/app/conf/templates.cfg
+  websocket:
+    build:
+        context: ./backend/
+        dockerfile: Dockerfile.websocket
+    links:
+      - redis
+    ports:
+      - "5124:5124"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
   redis:
-    image: redis:4
+    image: redis:4-alpine
     ports:
       - "6379:6379"

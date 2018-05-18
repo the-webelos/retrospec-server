@@ -7,7 +7,7 @@ from retro.utils.retro_logging import setup_basic_logging
 
 
 def buildapp_from_config(cfg):
-    setup_basic_logging(level=logging.WARNING)
+    setup_basic_logging()
     board_engine = BoardEngine(cfg)
     app = Flask(__name__, static_url_path='')
     app.register_blueprint(retro_api_blueprint.build_blueprint(board_engine))

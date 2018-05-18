@@ -10,7 +10,7 @@ class Config(object):
         self.websocket_host = "0.0.0.0"
         self.websocket_port = 5124
         self.flask_secret = "secret!"
-        self.template_config = os.path.join(os.path.abspath(__file__), '../../conf/templates.cfg')
+        self.template_config = None
 
     @staticmethod
     def from_env():

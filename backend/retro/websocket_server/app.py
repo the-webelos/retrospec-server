@@ -21,7 +21,9 @@ def buildapp_from_config(cfg):
     # different async modes, or leave it set to None for the application to choose
     # the best option based on installed packages.
     async_mode = "eventlet"
-    setup_basic_logging(level=logging.WARNING)
+    setup_basic_logging()
+    logging.getLogger("socketio").setLevel(logging.WARNING)
+    logging.getLogger("engineio").setLevel(logging.WARNING)
 
     _app = Flask(__name__)
     _app.config['SECRET_KEY'] = cfg.flask_secret
@@ -63,7 +65,7 @@ def subscribe(message):
 
         join_room(board_id)
 
-    _logger.warning("Subscribed to board '%s'. [USER=%s]" % (board_id, request.sid))
+    _logger.info("Subscribed to board '%s'. [USER=%s]" % (board_id, request.sid))
     emit('subscribe_response',
          {'board_id': board_id})
 
@@ -117,7 +119,7 @@ def test_connect():
 @socketio.on('disconnect', namespace=namespace)
 def test_disconnect():
     # get rooms for sid
-    _logger.info('Client disconnected', request.sid)
+    _logger.info('Client disconnected %s', request.sid)
 
 
 def message_cb(message, board_id):
@@ -140,4 +142,4 @@ def message_cb(message, board_id):
 
 if __name__ == "__main__":
     cfg_ = Config.from_env()
-    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=True)
+    socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=False)
