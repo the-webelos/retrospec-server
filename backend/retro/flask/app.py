@@ -1,4 +1,3 @@
-import logging
 from flask import Flask
 from retro.engine.board_engine import BoardEngine
 from retro.flask import retro_api_blueprint

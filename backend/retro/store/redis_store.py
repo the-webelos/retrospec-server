@@ -90,6 +90,15 @@ class RedisStore(Store):
                         # start transaction
                         pipe.multi()
 
+                        # delete nodes
+                        for node in nodes.deletes:
+                            pipe.delete(node.id)
+
+                        # publish deletes
+                        if nodes.deletes:
+                            pipe.publish(board_id, json.dumps({"event_type": "node_del",
+                                                               "event_data": [node.to_dict() for node in nodes.deletes]}))
+
                         # Update nodes
                         for node in nodes.updates:
                             node.version = board_version + 1
@@ -107,15 +116,6 @@ class RedisStore(Store):
                             pipe.publish(board_id,
                                          json.dumps({"event_type": "node_update",
                                                      "event_data": [node.to_dict() for node in nodes.updates]}))
-
-                        # delete nodes
-                        for node in nodes.deletes:
-                            pipe.delete(node.id)
-
-                        # publish deletes
-                        if nodes.deletes:
-                            pipe.publish(board_id, json.dumps({"event_type": "node_del",
-                                                               "event_data": [node.to_dict() for node in nodes.deletes]}))
 
                         # lock nodes
                         for node_id, lock_value in nodes.locks:

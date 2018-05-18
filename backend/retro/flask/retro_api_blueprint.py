@@ -1,6 +1,7 @@
 import logging
 from flask import Blueprint, make_response, request
 from retro.chain.operations import OperationFactory
+from retro.store.exceptions import NodeLockedError, UnlockFailureError
 from .blueprint_helpers import make_response_json
 
 _logger = logging.getLogger(__name__)
@@ -75,12 +76,6 @@ def build_blueprint(board_engine):
 
         parent_id = args.get("parent_id")
         operations = args.get("operations")
-
-
-        field = args.get("field")
-        value = args.get("value")
-        op = args.get("operation", "SET")
-
         lock = args.get("lock")
         unlock = args.get("unlock")
 
@@ -98,13 +93,16 @@ def build_blueprint(board_engine):
                 return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
 
             return make_response_json({"nodes": [node.to_dict() for node in nodes]})
-        except Exception:
-            return make_response("Error processing node update!", 500)
+        except NodeLockedError as nle:
+            _logger.exception(nle)
+            return make_response("Cannot edit locked node!", 400)
+        except UnlockFailureError as ufe:
+            _logger.exception(ufe)
+            return make_response("Failed to unlock node '%s'. See logs for details.", node_id, 400)
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["DELETE"])
     def delete_node(board_id, node_id):
-        args = request.json or {}
-        cascade = args.get("cascade", False)
+        cascade = request.args.get("cascade", "false").lower() == "true"
         nodes = board_engine.remove_node(board_id, node_id, cascade)
 
         return make_response_json({"deleted": [node.to_dict() for node in nodes]})
