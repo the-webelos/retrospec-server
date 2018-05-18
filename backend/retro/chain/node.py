@@ -18,7 +18,10 @@ class Node(object):
         if not isinstance(other, Node):
             return False
 
-        return other.id == self.id and other.content == self.content and self.version == other.version
+        return other.to_dict() == self.to_dict()
+
+    def __hash__(self):
+        return hash(((k, v) for k, v in self.to_dict()))
 
     def _dict_items(self):
         return {}
@@ -48,11 +51,15 @@ class BoardNode(Node):
     def set_child(self, node_id):
         self.children.add(node_id)
 
-    def __eq__(self, other):
-        if not isinstance(other, BoardNode):
-            return False
-
-        return other.id == self.id and other.content == self.content and other.children == self.children
+#    def __eq__(self, other):
+#        if not isinstance(other, BoardNode):
+#            return False
+#
+#        return other.id == self.id and other.content == self.content and other.version == self.version and \
+#               other.children == self.children
+#
+#    def __hash__(self):
+#        return hash((self.id, self.content, self.version, self.children))
 
     def _dict_items(self):
         return {"children": list(self.children)}
@@ -79,12 +86,12 @@ class ParentChildNode(Node):
         if self.child:
             yield self.child
 
-    def __eq__(self, other):
-        if not isinstance(other, ContentNode):
-            return False
-
-        return other.id == self.id and other.content == self.content and other.version == self.version \
-               and other.parent == self.parent and other.child == self.child
+#    def __eq__(self, other):
+#        if not isinstance(other, ContentNode):
+#            return False
+#
+#        return other.id == self.id and other.content == self.content and other.version == self.version \
+#               and other.parent == self.parent and other.child == self.child
 
     def _dict_items(self):
         return {"parent": self.parent, "child": self.child}
@@ -97,13 +104,13 @@ class ContentNode(ParentChildNode):
         super(ContentNode, self).__init__(id, content, version, orig_version, parent, child)
         self.column_header = column_header
 
-    def __eq__(self, other):
-        if not isinstance(other, ContentNode):
-            return False
-
-        return other.id == self.id and other.content == self.content and other.version == self.version \
-                and other.parent == self.parent and other.child == self.child \
-                and other.column_header == self.column_header
+#    def __eq__(self, other):
+#        if not isinstance(other, ContentNode):
+#            return False
+#
+#        return other.id == self.id and other.content == self.content and other.version == self.version \
+#                and other.parent == self.parent and other.child == self.child \
+#                and other.column_header == self.column_header
 
     def _dict_items(self):
         return {"parent": self.parent, "child": self.child, "column_header": self.column_header}
@@ -112,10 +119,10 @@ class ContentNode(ParentChildNode):
 class ColumnHeaderNode(ParentChildNode):
     NODE_TYPE = 'ColumnHeader'
 
-    def __eq__(self, other):
-        if not isinstance(other, ColumnHeaderNode):
-            return False
-
-        return other.id == self.id and other.content == self.content and other.version == self.version \
-               and other.parent == self.parent and other.child == self.child
+#    def __eq__(self, other):
+#        if not isinstance(other, ColumnHeaderNode):
+#            return False
+#
+#        return other.id == self.id and other.content == self.content and other.version == self.version \
+#               and other.parent == self.parent and other.child == self.child
 

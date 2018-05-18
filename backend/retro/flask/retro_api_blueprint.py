@@ -82,16 +82,16 @@ def build_blueprint(board_engine):
 
         try:
             if parent_id:
-                node = board_engine.move_node(board_id, node_id, parent_id)
+                nodes = board_engine.move_node(board_id, node_id, parent_id)
             elif field or lock or unlock:
                 if lock and unlock:
                     return make_response("Cannot provide lock and unlock in the same request.", 400)
-                node = board_engine.edit_node(
-                    board_id, node_id, OperationFactory().build_operation(op, field, value), lock, unlock)
+                nodes = [board_engine.edit_node(
+                    board_id, node_id, OperationFactory().build_operation(op, field, value), lock, unlock)]
             else:
                 return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
 
-            return make_response_json(node.to_dict())
+            return make_response_json({"nodes": [node.to_dict() for node in nodes]})
         except Exception:
             return make_response("Error processing node update!", 500)
 

@@ -94,8 +94,9 @@ class TestBoard(unittest.TestCase):
     def test_move_node_new_column(self):
         chain = Board(self.store, 'root')
 
-        node = chain.move_node("node_2", "node_5")
+        nodes = chain.move_node("node_2", "node_5")
 
+        self.assertEqual(5, len(nodes))
         self.assertEqual("node_5", self.store.get_node("node_2").parent)
         self.assertEqual("node_2", self.store.get_node("node_5").child)
         self.assertEqual("node_6", self.store.get_node("node_2").child)
@@ -103,11 +104,12 @@ class TestBoard(unittest.TestCase):
         self.assertEqual("node_3", self.store.get_node("node_1").child)
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
 
-    def test_move_node(self):
+    def test_move_node_swap(self):
         chain = Board(self.store, 'root')
 
-        node = chain.move_node("node_1", "node_2")
+        nodes = chain.move_node("node_1", "node_2")
 
+        self.assertEqual(4, len(nodes))
         self.assertEqual("column_a", self.store.get_node("node_2").parent)
         self.assertEqual("node_1", self.store.get_node("node_2").child)
 

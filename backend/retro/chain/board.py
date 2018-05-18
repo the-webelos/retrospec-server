@@ -29,7 +29,7 @@ class Board(object):
 
     def move_node(self, node_id, new_parent_id):
         nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
-        return nodes.updates[0]
+        return nodes.updates
 
     def edit_node(self, node_id, operation, lock=None, unlock=None):
         nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation, lock, unlock))
@@ -71,10 +71,30 @@ class Board(object):
         return TransactionNodes(updates=update_nodes)
 
     def _move_node(self, node_id, new_parent_id, proxy):
+        # A -> B -> C -> D
+        #  move node_id B new_parent_id C
+        # A new child C
+        # B new parent C, new child D
+        # C new parent A, new child B}
+        # D new parent B
+        #
+        # OR
+        #
+        # A -> B -> C -> D -> E
+        #  move node_id B new_parent_id D
+        # A new child C
+        # B new parent D, new child E
+        # C new parent A
+        # D new child B
+        # E new parent B
+
         node = proxy.get_node(node_id)
-        new_parent = proxy.get_node(new_parent_id)
         old_parent = proxy.get_node(node.parent)
         old_child = proxy.get_node(node.child) if node.child else None
+        if old_child and old_child.id == new_parent_id:
+            new_parent = old_child
+        else:
+            new_parent = proxy.get_node(new_parent_id)
 
         new_child = proxy.get_node(new_parent.child) if new_parent.child else None
 
@@ -92,7 +112,7 @@ class Board(object):
             node.set_child(new_child.id)
             new_child.parent = node_id
 
-        nodes = [node, new_parent, new_child, old_parent, old_child]
+        nodes = set([node, new_parent, new_child, old_parent, old_child])
         return TransactionNodes(updates=[node for node in nodes if node is not None])
 
     def _remove_node(self, node_id, proxy):
