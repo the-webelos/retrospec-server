@@ -9,11 +9,16 @@ _logger = logging.getLogger(__name__)
 
 
 class BoardEngine(object):
+    _default_template = {"id": "empty", "name": "Empty", "description": "Empty template with 0 columns", "columns": []}
+
     def __init__(self, config, store=None):
         self.config = config
         self.store = store if store else get_store(config)
 
         self.templates = self._build_templates(self.config.template_config)
+
+    def get_templates(self):
+        return list(self.templates.values())
 
     def create_board(self, name, template=None):
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
@@ -73,7 +78,7 @@ class BoardEngine(object):
         self.store.stop_listener(board_id)
 
     def _build_templates(self, template_config):
-        templates = {}
+        templates = {self._default_template['id']: self._default_template}
 
         if template_config:
             try:
@@ -83,11 +88,11 @@ class BoardEngine(object):
                         if line.startswith('#'):
                             continue
 
-                        parts = line.partition('=')
                         try:
-                            templates[parts[0]] = json.loads(parts[2])
+                            template = json.loads(line)
+                            templates[template['id']] = template
                         except:
-                            pass
+                            _logger.warning("Unable to load template: %s", line)
             except:
                 _logger.exception("Error parsing templates")
 

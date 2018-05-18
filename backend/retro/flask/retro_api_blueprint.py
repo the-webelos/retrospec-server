@@ -103,4 +103,8 @@ def build_blueprint(board_engine):
 
         return make_response_json({"deleted": [node.to_dict() for node in nodes]})
 
+    @blueprint.route("/api/v1/templates", methods=["GET"])
+    def get_board_templates():
+        return make_response_json({"templates": board_engine.get_templates()})
+
     return blueprint
