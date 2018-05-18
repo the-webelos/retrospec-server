@@ -33,6 +33,8 @@
             socket.on("disconnect_response", logWebsocketMsg);
             socket.on("subscribe_response", logSubscribeMsg);
             socket.on("unsubscribe_response", logUnsubscribeMsg);
+            socket.on("node_lock", logNodeLockMsg);
+            socket.on("node_unlock", logNodeUnlockMsg);
 
             function logWebsocketMsg(msg) {
                 $('#log').append('<br>' + $('<div/>').text('Received event: ' + msg.data).html());
@@ -42,6 +44,12 @@
             }
             function logUnsubscribeMsg(msg) {
                 $('#log').append('<br>' + $('<div/>').text('Unsubscribed from board ' + msg.board_id + "'").html());
+            }
+            function logNodeLockMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text("Node ' " + msg.node_id + " locked!").html());
+            }
+            function logNodeUnlockMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text("Node ' " + msg.node_id + " unlocked!").html());
             }
 
             // Interval function that tests message latency by sending a "ping"

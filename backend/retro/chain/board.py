@@ -1,5 +1,6 @@
 from functools import partial
 from retro.chain.node import ColumnHeaderNode, ContentNode
+from retro.store.exceptions import NodeLockedError
 
 
 class Board(object):
@@ -29,8 +30,8 @@ class Board(object):
         _, nodes, _ = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes[0]
 
-    def edit_node(self, node_id, operation):
-        _, nodes, _ = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation))
+    def edit_node(self, node_id, operation, lock, unlock):
+        _, nodes, _ = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation, lock, unlock))
 
         return nodes[0]
 
@@ -115,9 +116,20 @@ class Board(object):
 
         return [], [parent], nodes.values()
 
-    def _edit_node(self, node_id, operation, proxy):
+    def _edit_node(self, node_id, operation, lock, unlock, proxy):
         node = proxy.get_node(node_id)
-        operation.execute(node)
+        node_locked = proxy.is_node_locked(node_id)
+
+        if node_locked:
+            if unlock:
+                proxy.unlock_node(self.board_id, node_id, unlock)
+                operation.execute(node)
+            else:
+                raise NodeLockedError("Cannot edit locked node '%s'!" % node_id)
+        else:
+            operation.execute(node)
+            if lock:
+                proxy.lock_node(self.board_id, node_id, lock)
 
         return [], [node], []
 

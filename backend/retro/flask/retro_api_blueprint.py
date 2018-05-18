@@ -71,21 +71,29 @@ def build_blueprint(board_engine):
         return _update_node(board_id, node_id, request.json or {})
 
     def _update_node(board_id, node_id, args):
-        valid_args = ["parent_id", "field", "value", "op"]
+        valid_args = ["parent_id", "field", "value", "op", "lock", "unlock"]
 
         parent_id = args.get("parent_id")
         field = args.get("field")
         value = args.get("value")
         op = args.get("operation", "SET")
+        lock = args.get("lock")
+        unlock = args.get("unlock")
 
-        if parent_id:
-            node = board_engine.move_node(board_id, node_id, parent_id)
-        elif field:
-            node = board_engine.edit_node(board_id, node_id, OperationFactory().build_operation(op, field, value))
-        else:
-            return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
+        try:
+            if parent_id:
+                node = board_engine.move_node(board_id, node_id, parent_id)
+            elif field or lock or unlock:
+                if lock and unlock:
+                    return make_response("Cannot provide lock and unlock in the same request.", 400)
+                node = board_engine.edit_node(
+                    board_id, node_id, OperationFactory().build_operation(op, field, value), lock, unlock)
+            else:
+                return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
 
-        return make_response_json(node.to_dict())
+            return make_response_json(node.to_dict())
+        except Exception:
+            return make_response("Error processing node update!", 500)
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["DELETE"])
     def delete_node(board_id, node_id):

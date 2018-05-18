@@ -4,7 +4,7 @@ eventlet.monkey_patch()
 import logging
 import json
 from threading import Lock
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, disconnect
 from retro.engine.board_engine import BoardEngine
@@ -21,7 +21,7 @@ def buildapp_from_config(cfg):
     # different async modes, or leave it set to None for the application to choose
     # the best option based on installed packages.
     async_mode = "eventlet"
-    setup_basic_logging()
+    setup_basic_logging(level=logging.DEBUG)
     logging.getLogger("socketio").setLevel(logging.WARNING)
     logging.getLogger("engineio").setLevel(logging.WARNING)
 
@@ -129,6 +129,8 @@ def message_cb(message, board_id):
 
     if event_type in ('node_update', 'node_del'):
         socketio.emit(event_type, {"nodes": event['event_data']}, namespace=namespace, room=board_id)
+    elif event_type in ('node_lock', 'node_unlock'):
+        socketio.emit(event_type, {"node_id": event['event_data']}, namespace=namespace, room=board_id)
     elif event_type == 'lonely_board' or event_type == 'board_del':
         should_keep_listening = False
     elif event_type == 'board_create':

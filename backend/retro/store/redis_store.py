@@ -1,8 +1,10 @@
 import json
 import logging
 import redis
+from datetime import timedelta
 from redis import WatchError
 from retro.store import Store
+from .exceptions import LockFailureError, UnlockFailureError
 
 _logger = logging.getLogger(__name__)
 
@@ -66,6 +68,41 @@ class RedisStore(Store):
 
     def stop_listener(self, board_id):
         self.client.publish('%s' % board_id, json.dumps({'event_type': 'lonely_board', 'event_data': board_id}))
+
+    def lock_node(self, board_id, node_id, lock_value):
+        with self.client.pipeline(True) as pipe:
+            lock_key = self._get_lock_key(node_id)
+            pipe.multi()
+            if self.is_node_locked(node_id):
+                raise LockFailureError("Cannot lock node %s as it is already locked!" % node_id)
+
+            pipe.setex(lock_key, timedelta(hours=1), lock_value)
+            pipe.publish(board_id, json.dumps({'event_type': 'node_lock', 'event_data': node_id}))
+            # TODO Nick, do I need to execute here? I know the transaction executes. What happens with 2 executes?
+            pipe.execute()
+
+    def unlock_node(self, board_id, node_id, unlock_val):
+        with self.client.pipeline(True) as pipe:
+            lock_key = self._get_lock_key(node_id)
+            pipe.multi()
+            lock_val = self.client.get(lock_key)
+            if not lock_val:
+                _logger.warning("Cannot unlock node '%s' as it is already unlocked.", node_id)
+            elif lock_val != unlock_val:
+                raise UnlockFailureError("Cannot unlock node '%s'! "
+                                         "Unlock value does not match the value used to create the original lock." % node_id)
+            else:
+                pipe.delete(lock_key)
+                pipe.publish(board_id, json.dumps({'event_type': 'node_unlock', 'event_data': node_id}))
+                pipe.execute()
+                _logger.debug("Removed lock for node '%s'.", node_id)
+
+    def is_node_locked(self, node_id):
+        return self.client.exists(self._get_lock_key(node_id))
+
+    @staticmethod
+    def _get_lock_key(node_id):
+        return "NODELOCK.%s" % node_id
 
     def transaction(self, board_id, func):
         with self.client.pipeline(True) as pipe:

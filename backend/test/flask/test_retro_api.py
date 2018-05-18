@@ -65,7 +65,7 @@ class TestRetroApi(unittest.TestCase):
         req.raise_for_status()
         response = req.json()
 
-        return response
+        return response.get("nodes")[0]
 
     def _build_url(self, route):
         return "%s%s" % (self.base_url, route)

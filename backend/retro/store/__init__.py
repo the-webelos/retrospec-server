@@ -20,6 +20,12 @@ class Store(object):
     def get_node(self, node_id):
         raise NotImplementedError
 
+    def board_update_listener(self, board_id, message_cb=None):
+        raise NotImplementedError
+
+    def stop_listener(self, board_id):
+        raise NotImplementedError
+
     def node_from_dict(self, node_dict):
         cls = self.node_types.get(node_dict['type'])
         if not cls:
@@ -28,9 +34,3 @@ class Store(object):
         d = node_dict.copy()
         d.pop('type')
         return cls(**d)
-
-    def board_update_listener(self, board_id, message_cb=None):
-        raise NotImplementedError
-
-    def stop_listener(self, board_id):
-        raise NotImplementedError
