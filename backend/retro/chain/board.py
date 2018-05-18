@@ -31,8 +31,8 @@ class Board(object):
         nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
         return nodes.updates
 
-    def edit_node(self, node_id, operation, lock=None, unlock=None):
-        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation, lock, unlock))
+    def edit_node(self, node_id, operations, lock=None, unlock=None):
+        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operations, lock, unlock))
 
         return nodes.updates[0]
 
@@ -148,7 +148,7 @@ class Board(object):
 
         return TransactionNodes(updates=[parent], deletes=nodes.values())
 
-    def _edit_node(self, node_id, operation, lock, unlock, proxy):
+    def _edit_node(self, node_id, operations, lock, unlock, proxy):
         node = proxy.get_node(node_id)
         node_lock = proxy.get_node_lock(node_id)
         lock_nodes = []
@@ -167,8 +167,9 @@ class Board(object):
             # node is unlocked and we want to lock it
             lock_nodes.append((node_id, lock))
 
-        # apply operation (SET, INCR, etc) to node
-        operation.execute(node)
+        # apply operations (SET, INCR, etc) to node
+        for operation in operations:
+            operation.execute(node)
 
         return TransactionNodes(updates=[node], locks=lock_nodes, unlocks=unlock_nodes)
 
