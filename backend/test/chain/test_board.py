@@ -104,7 +104,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual("node_3", self.store.get_node("node_1").child)
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
 
-    def test_move_node_swap(self):
+    def test_move_node_swap_down(self):
         chain = Board(self.store, 'root')
 
         nodes = chain.move_node("node_1", "node_2")
@@ -118,6 +118,25 @@ class TestBoard(unittest.TestCase):
 
         self.assertEqual("node_1", self.store.get_node("node_3").parent)
         self.assertEqual("node_4", self.store.get_node("node_3").child)
+
+        self.assertEqual("node_2", self.store.get_node("column_a").child)
+
+    def test_move_node_swap_up(self):
+        chain = Board(self.store, 'root')
+
+        nodes = chain.move_node("node_2", "column_a")
+
+        self.assertEqual(4, len(nodes))
+        self.assertEqual("column_a", self.store.get_node("node_2").parent)
+        self.assertEqual("node_1", self.store.get_node("node_2").child)
+
+        self.assertEqual("node_2", self.store.get_node("node_1").parent)
+        self.assertEqual("node_3", self.store.get_node("node_1").child)
+
+        self.assertEqual("node_1", self.store.get_node("node_3").parent)
+        self.assertEqual("node_4", self.store.get_node("node_3").child)
+
+        self.assertEqual("node_2", self.store.get_node("column_a").child)
 
     def test_edit_node_set_not_exists(self):
         chain = Board(self.store, 'root')

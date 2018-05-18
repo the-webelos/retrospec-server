@@ -87,16 +87,27 @@ class Board(object):
         # C new parent A
         # D new child B
         # E new parent B
+        #
+        # OR
+        #
+        # A -> B -> C -> D
+        #  move node_id C new_parent_id A
+        # A new child C
+        # B new parent C, new child D
+        # C new parent A, new child B}
+        # D new parent B
 
         node = proxy.get_node(node_id)
         old_parent = proxy.get_node(node.parent)
         old_child = proxy.get_node(node.child) if node.child else None
-        if old_child and old_child.id == new_parent_id:
-            new_parent = old_child
-        else:
-            new_parent = proxy.get_node(new_parent_id)
-
+        new_parent = proxy.get_node(new_parent_id)
         new_child = proxy.get_node(new_parent.child) if new_parent.child else None
+
+        if old_parent == new_child:
+            old_parent = new_child
+
+        if new_parent == old_child:
+            new_parent = old_child
 
         # unlink our moving node from old parent
         old_parent.remove_child(node_id)
