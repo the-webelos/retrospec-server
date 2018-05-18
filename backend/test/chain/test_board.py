@@ -191,6 +191,23 @@ class TestBoard(unittest.TestCase):
         self.assertEqual("bar", node.content['foo'])
         self.assertEqual("boo", node.content['baz'])
 
+    def test_remove_node_column_header(self):
+        chain = Board(self.store, 'root')
+
+        chain.remove_node("column_a", True)
+
+        self.assertEqual({"column_b"}, self.store.get_node("root").children)
+        with self.assertRaises(KeyError):
+            self.store.get_node("column_a")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_1")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_2")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_3")
+        with self.assertRaises(KeyError):
+            self.store.get_node("node_4")
+
     def test_remove_node(self):
         chain = Board(self.store, 'root')
 
