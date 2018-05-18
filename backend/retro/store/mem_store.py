@@ -9,6 +9,7 @@ class MemStore(Store):
         self.nodes = nodes if nodes else {}
         self.boards = set()
         self.lock = threading.RLock()
+        self.node_locks = dict()
 
     def get_node(self, node_id):
         with self.lock:
@@ -16,6 +17,9 @@ class MemStore(Store):
             node_dict['id'] = node_id
 
             return self.node_from_dict(node_dict)
+
+    def get_node_lock(self, node_id):
+        return self.node_locks.get(node_id)
 
     def create_board(self, board_node):
         self.boards.add(board_node.id)
@@ -45,9 +49,9 @@ class MemStore(Store):
         with self.lock:
             board_version = self.nodes[board_id]['version']
 
-            read_nodes, update_nodes, remove_nodes = func(self)
+            nodes = func(self)
 
-            for node in update_nodes:
+            for node in nodes.updates:
                 node.version = board_version + 1
 
                 # update orig version if needed
@@ -60,7 +64,13 @@ class MemStore(Store):
 
                 self.nodes[board_id]['version'] = board_version + 1
 
-            for node in remove_nodes:
+            for node in nodes.deletes:
                 del self.nodes[node.id]
 
-            return read_nodes, update_nodes, remove_nodes
+            for node_id, lock_val in nodes.locks:
+                self.node_locks[node_id] = lock_val
+
+            for node_id in nodes.unlocks:
+                self.node_locks.pop(node_id, None)
+
+            return nodes

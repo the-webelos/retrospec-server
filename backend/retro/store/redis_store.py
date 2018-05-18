@@ -69,36 +69,8 @@ class RedisStore(Store):
     def stop_listener(self, board_id):
         self.client.publish('%s' % board_id, json.dumps({'event_type': 'lonely_board', 'event_data': board_id}))
 
-    def lock_node(self, board_id, node_id, lock_value):
-        with self.client.pipeline(True) as pipe:
-            lock_key = self._get_lock_key(node_id)
-            pipe.multi()
-            if self.is_node_locked(node_id):
-                raise LockFailureError("Cannot lock node %s as it is already locked!" % node_id)
-
-            pipe.setex(lock_key, timedelta(hours=1), lock_value)
-            pipe.publish(board_id, json.dumps({'event_type': 'node_lock', 'event_data': node_id}))
-            # TODO Nick, do I need to execute here? I know the transaction executes. What happens with 2 executes?
-            pipe.execute()
-
-    def unlock_node(self, board_id, node_id, unlock_val):
-        with self.client.pipeline(True) as pipe:
-            lock_key = self._get_lock_key(node_id)
-            pipe.multi()
-            lock_val = self.client.get(lock_key)
-            if not lock_val:
-                _logger.warning("Cannot unlock node '%s' as it is already unlocked.", node_id)
-            elif lock_val != unlock_val:
-                raise UnlockFailureError("Cannot unlock node '%s'! "
-                                         "Unlock value does not match the value used to create the original lock." % node_id)
-            else:
-                pipe.delete(lock_key)
-                pipe.publish(board_id, json.dumps({'event_type': 'node_unlock', 'event_data': node_id}))
-                pipe.execute()
-                _logger.debug("Removed lock for node '%s'.", node_id)
-
-    def is_node_locked(self, node_id):
-        return self.client.exists(self._get_lock_key(node_id))
+    def get_node_lock(self, node_id):
+        return self.client.get(self._get_lock_key(node_id))
 
     @staticmethod
     def _get_lock_key(node_id):
@@ -112,13 +84,14 @@ class RedisStore(Store):
 
                     board_version = json.loads(pipe.hget(board_id, 'version'))['value']
 
-                    read_nodes, update_nodes, remove_nodes = func(RedisStore(client=pipe))
+                    nodes = func(RedisStore(client=pipe))
 
-                    if update_nodes or remove_nodes:
+                    if nodes.updates or nodes.deletes or nodes.locks or nodes.unlocks:
                         # start transaction
                         pipe.multi()
 
-                        for node in update_nodes:
+                        # Update nodes
+                        for node in nodes.updates:
                             node.version = board_version + 1
 
                             # update orig version if needed
@@ -129,23 +102,47 @@ class RedisStore(Store):
 
                             pipe.hmset(node.id, node_dict)
 
-                        if update_nodes:
+                        # publish updates
+                        if nodes.updates:
                             pipe.publish(board_id,
                                          json.dumps({"event_type": "node_update",
-                                                     "event_data": [node.to_dict() for node in update_nodes]}))
+                                                     "event_data": [node.to_dict() for node in nodes.updates]}))
 
-                        for node in remove_nodes:
+                        # delete nodes
+                        for node in nodes.deletes:
                             pipe.delete(node.id)
 
-                        if remove_nodes:
+                        # publish deletes
+                        if nodes.deletes:
                             pipe.publish(board_id, json.dumps({"event_type": "node_del",
-                                                               "event_data": [node.to_dict() for node in remove_nodes]}))
+                                                               "event_data": [node.to_dict() for node in nodes.deletes]}))
 
+                        # lock nodes
+                        for node_id, lock_value in nodes.locks:
+                            lock_key = self._get_lock_key(node_id)
+                            pipe.setex(lock_key, timedelta(hours=1), lock_value)
+
+                        # publish locks
+                        if nodes.locks:
+                            pipe.publish(board_id, json.dumps({'event_type': 'node_lock',
+                                                               'event_data': [node_id for node_id, _ in nodes.locks]}))
+
+                        # unlock nodes
+                        for node_id in nodes.unlocks:
+                            lock_key = self._get_lock_key(node_id)
+                            pipe.delete(lock_key)
+
+                        # publish unlocks
+                        if nodes.unlocks:
+                            pipe.publish(board_id, json.dumps({'event_type': 'node_unlock',
+                                                               'event_data': [node_id for node_id in nodes.unlocks]}))
+
+                        # update board version
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
 
                         pipe.execute()
 
-                    return read_nodes, update_nodes, remove_nodes
+                    return nodes
                 except WatchError:
                     _logger.info("Transaction failed")
 

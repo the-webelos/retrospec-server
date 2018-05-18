@@ -1,6 +1,7 @@
 from functools import partial
 from retro.chain.node import ColumnHeaderNode, ContentNode
-from retro.store.exceptions import NodeLockedError
+from retro.store import TransactionNodes
+from retro.store.exceptions import NodeLockedError, UnlockFailureError
 
 
 class Board(object):
@@ -12,36 +13,36 @@ class Board(object):
         return "%s|%s" % (self.board_id, self.store.next_node_id())
 
     def nodes(self):
-        nodes, _, _ = self.store.transaction(self.board_id, partial(self._collect_all))
-        return nodes
+        nodes = self.store.transaction(self.board_id, partial(self._collect_all))
+        return nodes.reads
 
     def delete(self):
-        _, _, nodes = self.store.transaction(self.board_id, partial(self._delete_all))
-        return nodes
+        nodes = self.store.transaction(self.board_id, partial(self._delete_all))
+        return nodes.deletes
 
     def get_node(self, node_id):
         return self.store.get_node(node_id)
 
     def add_node(self, node_content, parent_id):
-        _, nodes, _ = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
-        return nodes[1]
+        nodes = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
+        return nodes.updates[1]
 
     def move_node(self, node_id, new_parent_id):
-        _, nodes, _ = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
-        return nodes[0]
+        nodes = self.store.transaction(self.board_id, partial(self._move_node, node_id, new_parent_id))
+        return nodes.updates[0]
 
-    def edit_node(self, node_id, operation, lock, unlock):
-        _, nodes, _ = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation, lock, unlock))
+    def edit_node(self, node_id, operation, lock=None, unlock=None):
+        nodes = self.store.transaction(self.board_id, partial(self._edit_node, node_id, operation, lock, unlock))
 
-        return nodes[0]
+        return nodes.updates[0]
 
     def remove_node(self, node_id, cascade):
         if cascade:
-            _, _, nodes = self.store.transaction(self.board_id, partial(self._cascade_remove_nodes, node_id))
+            nodes = self.store.transaction(self.board_id, partial(self._cascade_remove_nodes, node_id))
         else:
-            _, _, nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
+            nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
 
-        return nodes
+        return nodes.deletes
 
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
@@ -67,7 +68,7 @@ class Board(object):
 
         update_nodes = [parent, node, child] if child else [parent, node]
 
-        return [], update_nodes, []
+        return TransactionNodes(updates=update_nodes)
 
     def _move_node(self, node_id, new_parent_id, proxy):
         node = proxy.get_node(node_id)
@@ -92,7 +93,7 @@ class Board(object):
             new_child.parent = node_id
 
         nodes = [node, new_parent, new_child, old_parent, old_child]
-        return [], [node for node in nodes if node is not None], []
+        return TransactionNodes(updates=[node for node in nodes if node is not None])
 
     def _remove_node(self, node_id, proxy):
         node = proxy.get_node(node_id)
@@ -105,7 +106,7 @@ class Board(object):
             child.parent = parent.id
 
         update_nodes = [parent, child] if child else [parent]
-        return [], update_nodes, [node]
+        return TransactionNodes(updates=update_nodes, deletes=[node])
 
     def _cascade_remove_nodes(self, node_id, proxy):
         node = proxy.get_node(node_id)
@@ -114,30 +115,37 @@ class Board(object):
 
         nodes = self._collect_nodes(proxy, node_id, parent.id)
 
-        return [], [parent], nodes.values()
+        return TransactionNodes(updates=[parent], deletes=nodes.values())
 
     def _edit_node(self, node_id, operation, lock, unlock, proxy):
         node = proxy.get_node(node_id)
-        node_locked = proxy.is_node_locked(node_id)
+        node_lock = proxy.get_node_lock(node_id)
+        lock_nodes = []
+        unlock_nodes = []
 
-        if node_locked:
+        if node_lock:
+            # node is locked
             if unlock:
-                proxy.unlock_node(self.board_id, node_id, unlock)
-                operation.execute(node)
+                # we are trying to unlock the locked node
+                if node_lock != unlock:
+                    raise UnlockFailureError("Failed to unlock node '%s': %s != %s", node_id, unlock, node_lock)
+                unlock_nodes.append(node_id)
             else:
                 raise NodeLockedError("Cannot edit locked node '%s'!" % node_id)
-        else:
-            operation.execute(node)
-            if lock:
-                proxy.lock_node(self.board_id, node_id, lock)
+        elif lock:
+            # node is unlocked and we want to lock it
+            lock_nodes.append((node_id, lock))
 
-        return [], [node], []
+        # apply operation (SET, INCR, etc) to node
+        operation.execute(node)
+
+        return TransactionNodes(updates=[node], locks=lock_nodes, unlocks=unlock_nodes)
 
     def _collect_all(self, proxy):
-        return self._collect_nodes(proxy, self.board_id).values(), [], []
+        return TransactionNodes(reads=self._collect_nodes(proxy, self.board_id).values())
 
     def _delete_all(self, proxy):
-        return [], [], self._collect_nodes(proxy, self.board_id).values()
+        return TransactionNodes(deletes=self._collect_nodes(proxy, self.board_id).values())
 
     def _collect_nodes(self, proxy, root_id, parent_id=None):
         collected = {}

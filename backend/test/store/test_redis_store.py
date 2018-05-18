@@ -2,6 +2,7 @@
 from functools import partial
 import unittest
 
+from retro.store import TransactionNodes
 from retro.store.redis_store import RedisStore
 from retro.chain.node import ColumnHeaderNode, BoardNode
 from helpers import get_redis_container, get_redis_config
@@ -27,8 +28,8 @@ class TestRedisStore(unittest.TestCase):
         self.store.client.flushall()
 
     def test_transaction(self):
-        #column = ColumnHeaderNode(id='column_a', content="ColumnA", parent="root", child=None)
-        _, [node, parent], _ = self.store.transaction('root', partial(self._transaction, {"foo": "ColumnA"}, "root"))
+        node, parent = self.store.transaction('root', partial(self._transaction, {"foo": "ColumnA"}, "root")).updates
+
         root = self.store.get_node('root')
 
         self.assertEqual({node.id}, root.children)
@@ -54,4 +55,4 @@ class TestRedisStore(unittest.TestCase):
         node = ColumnHeaderNode(proxy.next_node_id(), node_content, parent=parent_id)
         parent.set_child(node.id)
 
-        return [], [node, parent], []
+        return TransactionNodes(updates=[node, parent])

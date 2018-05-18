@@ -1,6 +1,15 @@
+from typing import NamedTuple
 import uuid
 
 from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
+
+
+class TransactionNodes(NamedTuple):
+    reads: list = []
+    updates: list = []
+    deletes: list = []
+    locks: list = []
+    unlocks: list = []
 
 
 class Store(object):
