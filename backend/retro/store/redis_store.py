@@ -31,9 +31,11 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.sadd(self.BOARD_SET_KEY, board_node.id)
-            pipe.publish(self.BOARD_SET_KEY, json.dumps({"event_type": "board_create", "event_data": board_node.id}))
+            pipe.publish(self._get_publish_channel(board_node.id),
+                         json.dumps({"event_type": "board_create", "event_data": board_node.id}))
             pipe.hmset(board_node.id, self._get_node_map(board_node))
-            pipe.publish(board_node.id, json.dumps({"event_type": "node_update", "event_data": board_node.to_dict()}))
+            pipe.publish(self._get_publish_channel(board_node.id),
+                         json.dumps({"event_type": "node_update", "event_data": board_node.to_dict()}))
 
             pipe.execute()
 
@@ -45,44 +47,38 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.srem(self.BOARD_SET_KEY, board_id)
-            pipe.publish(self.BOARD_SET_KEY, json.dumps({"event_type": "board_del", "event_data": board_id}))
+            pipe.publish(self._get_publish_channel(board_id),
+                         json.dumps({"event_type": "board_del", "event_data": board_id}))
 
             pipe.execute()
 
-    def board_update_listener(self, board_id, message_cb=lambda *x: True):
+    def update_listener(self, message_cb=lambda *x: True):
         p = self.client.pubsub()
-        channel = '%s' % board_id
-        p.subscribe(channel)
-        _logger.debug("Subscribed to channel '%s'.", channel)
+        p.psubscribe('board_update|*')
 
         for event in p.listen():
             try:
-                _logger.debug("Board listener received event '%s'", event)
+                _logger.warning("Update listener received event '%s'", event)
                 if event['type'] == 'message':
+                    board_id = event['channel'].partition('|')[2]
                     if not message_cb(event, board_id):
                         break
             except:
                 _logger.exception("Error during subscription processing.")
 
-        p.unsubscribe(channel)
-        _logger.debug("Subscription to channel '%s' terminated" % channel)
-
-    def stop_listener(self, board_id):
-        _logger.debug("Stopping listener for board '%s'...", board_id)
-        self.client.publish('%s' % board_id, json.dumps({'event_type': 'lonely_board', 'event_data': board_id}))
-
-    def get_active_subscriptions(self, channel=None):
-        return self.client.pubsub_channels(pattern=channel) if channel else self.client.pubsub_channels()
+        p.punsubscribe('board_update|*')
+        _logger.info("Subscription terminated")
 
     def get_node_lock(self, node_id):
         return self.client.get(self._get_lock_key(node_id))
 
-    def is_subscribed(self, board_id):
-        return True if self.get_active_subscriptions(channel=board_id) else False
-
     @staticmethod
     def _get_lock_key(node_id):
         return "NODELOCK.%s" % node_id
+
+    @staticmethod
+    def _get_publish_channel(board_id):
+        return 'board_update|%s' % board_id
 
     def transaction(self, board_id, func):
         with self.client.pipeline(True) as pipe:
@@ -104,8 +100,9 @@ class RedisStore(Store):
 
                         # publish deletes
                         if nodes.deletes:
-                            pipe.publish(board_id, json.dumps({"event_type": "node_del",
-                                                               "event_data": [node.to_dict() for node in nodes.deletes]}))
+                            pipe.publish(self._get_publish_channel(board_id),
+                                         json.dumps({"event_type": "node_del",
+                                                     "event_data": [node.to_dict() for node in nodes.deletes]}))
 
                         # Update nodes
                         for node in nodes.updates:
@@ -121,7 +118,7 @@ class RedisStore(Store):
 
                         # publish updates
                         if nodes.updates:
-                            pipe.publish(board_id,
+                            pipe.publish(self._get_publish_channel(board_id),
                                          json.dumps({"event_type": "node_update",
                                                      "event_data": [node.to_dict() for node in nodes.updates]}))
 
@@ -132,8 +129,9 @@ class RedisStore(Store):
 
                         # publish locks
                         if nodes.locks:
-                            pipe.publish(board_id, json.dumps({'event_type': 'node_lock',
-                                                               'event_data': [node_id for node_id, _ in nodes.locks]}))
+                            pipe.publish(self._get_publish_channel(board_id),
+                                         json.dumps({'event_type': 'node_lock',
+                                                     'event_data': [node_id for node_id, _ in nodes.locks]}))
 
                         # unlock nodes
                         for node_id in nodes.unlocks:
@@ -142,8 +140,9 @@ class RedisStore(Store):
 
                         # publish unlocks
                         if nodes.unlocks:
-                            pipe.publish(board_id, json.dumps({'event_type': 'node_unlock',
-                                                               'event_data': [node_id for node_id in nodes.unlocks]}))
+                            pipe.publish(self._get_publish_channel(board_id),
+                                         json.dumps({'event_type': 'node_unlock',
+                                                     'event_data': [node_id for node_id in nodes.unlocks]}))
 
                         # update board version
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))
