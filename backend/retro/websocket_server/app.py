@@ -103,6 +103,7 @@ def test_connect():
 
     with thread_lock:
         if thread is None:
+            _logger.debug("Starting update listener thread...")
             thread = socketio.start_background_task(board_engine.update_listener, message_cb)
 
     emit('connect_response', {'data': 'Connected'})
@@ -128,6 +129,8 @@ def message_cb(message, board_id):
     should_keep_listening = True
     event = json.loads(message['data'])
     event_type = event.get('event_type')
+
+    _logger.debug("Processing '%s' event", event_type)
 
     if event_type in ('node_update', 'node_del'):
         socketio.emit(event_type, {"nodes": event['event_data']}, namespace=namespace, room=board_id)

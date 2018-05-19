@@ -58,8 +58,8 @@ class RedisStore(Store):
 
         for event in p.listen():
             try:
-                _logger.warning("Update listener received event '%s'", event)
-                if event['type'] == 'message':
+                _logger.debug("Update listener received event '%s'", event)
+                if event['type'] == 'pmessage' and event['pattern']:
                     board_id = event['channel'].partition('|')[2]
                     if not message_cb(event, board_id):
                         break
