@@ -77,6 +77,12 @@ class BoardEngine(object):
     def unsubscribe_board(self, board_id):
         self.store.stop_listener(board_id)
 
+    def get_board_subscriptions(self, board_id=None):
+        return self.store.get_active_subscriptions(channel=board_id)
+
+    def is_subscribed(self, board_id):
+        return self.store.is_subscribed(board_id)
+
     def _build_templates(self, template_config):
         templates = {self._default_template['id']: self._default_template}
 

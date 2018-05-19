@@ -35,6 +35,8 @@
             socket.on("unsubscribe_response", logUnsubscribeMsg);
             socket.on("node_lock", logNodeLockMsg);
             socket.on("node_unlock", logNodeUnlockMsg);
+            socket.on("node_update", logNodeUpdateMsg);
+            socket.on("node_del", logNodeDeleteMsg);
 
             function logWebsocketMsg(msg) {
                 $('#log').append('<br>' + $('<div/>').text('Received event: ' + msg.data).html());
@@ -50,6 +52,12 @@
             }
             function logNodeUnlockMsg(msg) {
                 $('#log').append('<br>' + $('<div/>').text("Node ' " + msg.node_id + " unlocked!").html());
+            }
+            function logNodeUpdateMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text('Received node update: ' + JSON.stringify(msg)).html());
+            }
+            function logNodeDeleteMsg(msg) {
+                $('#log').append('<br>' + $('<div/>').text('Received node delete: ' + JSON.stringify(msg)).html());
             }
 
             // Interval function that tests message latency by sending a "ping"

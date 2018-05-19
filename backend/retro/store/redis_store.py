@@ -4,7 +4,7 @@ import redis
 from datetime import timedelta
 from redis import WatchError
 from retro.store import Store
-from .exceptions import LockFailureError, UnlockFailureError
+
 
 _logger = logging.getLogger(__name__)
 
@@ -51,26 +51,34 @@ class RedisStore(Store):
 
     def board_update_listener(self, board_id, message_cb=lambda *x: True):
         p = self.client.pubsub()
-        channel = '%s*' % board_id
-        p.psubscribe(channel)
+        channel = '%s' % board_id
+        p.subscribe(channel)
+        _logger.debug("Subscribed to channel '%s'.", channel)
 
         for event in p.listen():
             try:
                 _logger.debug("Board listener received event '%s'", event)
-                if event['type'] == 'pmessage' and event['pattern'] is not None:
+                if event['type'] == 'message':
                     if not message_cb(event, board_id):
                         break
             except:
                 _logger.exception("Error during subscription processing.")
 
         p.unsubscribe(channel)
-        _logger.info("Subscription to channel '%s' terminated" % channel)
+        _logger.debug("Subscription to channel '%s' terminated" % channel)
 
     def stop_listener(self, board_id):
+        _logger.debug("Stopping listener for board '%s'...", board_id)
         self.client.publish('%s' % board_id, json.dumps({'event_type': 'lonely_board', 'event_data': board_id}))
+
+    def get_active_subscriptions(self, channel=None):
+        return self.client.pubsub_channels(pattern=channel) if channel else self.client.pubsub_channels()
 
     def get_node_lock(self, node_id):
         return self.client.get(self._get_lock_key(node_id))
+
+    def is_subscribed(self, board_id):
+        return True if self.get_active_subscriptions(channel=board_id) else False
 
     @staticmethod
     def _get_lock_key(node_id):
