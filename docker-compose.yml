@@ -3,7 +3,7 @@ version: '3'
 services:
   api:
     build:
-        context: ./backend/
+        context: ./
         dockerfile: Dockerfile.api
     links:
       - redis
@@ -15,7 +15,7 @@ services:
       - TEMPLATE_CONFIG=/app/conf/templates.cfg
   websocket:
     build:
-        context: ./backend/
+        context: ./
         dockerfile: Dockerfile.websocket
     links:
       - redis
