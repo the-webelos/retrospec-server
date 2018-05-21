@@ -47,7 +47,7 @@ class BoardEngine(object):
 
         return board.delete()
 
-    def get_boards(self):
+    def get_boards(self, start=0, rows=20):
         boards = []
         for board_id in self.store.get_board_ids():
             boards.append(self.store.get_node(board_id))
