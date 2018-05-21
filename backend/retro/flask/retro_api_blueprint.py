@@ -21,9 +21,17 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/v1/boards", methods=["GET"])
     def get_all_boards():
-        boards = board_engine.get_boards()
+        try:
+            start = int(request.args.get("start", 0))
+            rows = int(request.args.get("rows", 20))
 
-        return make_response_json({"boards": [node.to_dict() for node in boards]})
+            boards = board_engine.get_boards(start=start, rows=rows)
+            response = make_response_json({"boards": [node.to_dict() for node in boards]})
+        except (ValueError, TypeError) as ver:
+            _logger.exception(ver)
+            response = make_response("Invalid request parameters.", 400)
+
+        return response
 
     @blueprint.route("/api/v1/boards/<board_id>", methods=["GET"])
     def get_board(board_id):

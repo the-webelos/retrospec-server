@@ -49,8 +49,8 @@ class BoardEngine(object):
 
     def get_boards(self):
         boards = []
-        for id in self.store.get_board_ids():
-            boards.append(self.store.get_node(id))
+        for board_id in self.store.get_board_ids():
+            boards.append(self.store.get_node(board_id))
 
         return boards
 
