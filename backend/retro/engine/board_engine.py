@@ -15,20 +15,34 @@ class BoardEngine(object):
         self.config = config
         self.store = store if store else get_store(config)
 
+        self.config.template_config = "/home/jlorusso/dev/retrospec-server/backend/conf/templates.cfg"
         self.templates = self._build_templates(self.config.template_config)
 
     def get_templates(self):
         return list(self.templates.values())
 
     def create_board(self, name, template=None):
+        template_def = self.templates[template] if template else {'columns': []}
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
         self.store.create_board(board_node)
 
-        nodes = [board_node]
-        template_def = self.templates[template] if template else {'columns': []}
+        return self._generate_nodes_from_template(template_def, board_node.id, nodes=[board_node])
 
-        for column in template_def['columns']:
-            nodes.append(self.add_node(board_node.id, board_node.id, {'name': column}))
+    def _generate_nodes_from_template(self, template_def, board_id, nodes=None):
+        nodes = nodes or []
+
+        def _add_node(_parent_id, content):
+            n = self.add_node(board_id, _parent_id, content=content)
+            nodes.append(n)
+            return n.id
+
+        for column_dict in template_def['columns']:
+            # Allow users to provide column names as a list of strings if they want to.
+            if isinstance(column_dict, str):
+                column_dict = {"name": column_dict}
+            parent_id = _add_node(board_id, {'name': column_dict.get("name")})
+            for node_content in column_dict.get("nodes", []):
+                parent_id = _add_node(parent_id, node_content)
 
         return nodes
 
