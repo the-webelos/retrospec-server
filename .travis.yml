@@ -4,14 +4,11 @@ python:
   - "3.6"
 cache: pip
 
-before_install:
-  - cd backend
-
 install:
-  - pip install -r requirements.txt
-  - pip install -r test/requirements.txt
+  - pip install -r backend/requirements.txt
+  - pip install -r backend/test/requirements.txt
 
 script:
-  - PYTHONPATH=backend python test/chain/test_board.py
-  - PYTHONPATH=backend python test/flask/test_retro_api.py
-  - PYTHONPATH=backend python test/store/test_redis_store.py
+  - PYTHONPATH=backend python backend/test/chain/test_board.py
+  - PYTHONPATH=backend python backend/test/flask/test_retro_api.py
+  - PYTHONPATH=backend python backend/test/store/test_redis_store.py
