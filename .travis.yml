@@ -12,6 +12,6 @@ install:
   - pip install -r test/requirements.txt
 
 script:
-  - python test/chain/test_board.py
-  - python test/flask/test_retro_api.py
-  - python test/store/test_redis_store.py
+  - PYTHONPATH=backend python test/chain/test_board.py
+  - PYTHONPATH=backend python test/flask/test_retro_api.py
+  - PYTHONPATH=backend python test/store/test_redis_store.py
