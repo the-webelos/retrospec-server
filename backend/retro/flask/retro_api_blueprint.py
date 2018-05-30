@@ -1,7 +1,7 @@
 import logging
 from flask import Blueprint, make_response, request
 from retro.chain.operations import OperationFactory
-from retro.store.exceptions import NodeLockedError, UnlockFailureError
+from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError
 from .blueprint_helpers import make_response_json
 
 _logger = logging.getLogger(__name__)
@@ -82,8 +82,12 @@ def build_blueprint(board_engine):
     def _update_node(board_id, node_id, args):
         valid_args = ["parent_id", "operations", "lock", "unlock"]
 
+        # Operations is expected to be a list of dicts with the following format:
+        # [{operation: SET, "field": "foo", "value": "bar"},
+        #  {operation: INCR, "field": "baz", "value": 1},
+        #  {operation: DELETE, "field": "foo"}, ...]
+        operations = args.get("operations", [])
         parent_id = args.get("parent_id")
-        operations = args.get("operations")
         lock = args.get("lock")
         unlock = args.get("unlock")
 
@@ -98,7 +102,7 @@ def build_blueprint(board_engine):
                     [OperationFactory().build_operation(o.get("operation", "SET"), o.get("field"), o.get("value")) for o in operations],
                     lock, unlock)]
             else:
-                return make_response("No valid arguments provided. Must send at least one of [%s]" % valid_args, 400)
+                return make_response("No valid arguments provided. Must send at least one of %s" % valid_args, 400)
 
             return make_response_json({"nodes": [node.to_dict() for node in nodes]})
         except NodeLockedError as nle:
@@ -107,6 +111,9 @@ def build_blueprint(board_engine):
         except UnlockFailureError as ufe:
             _logger.exception(ufe)
             return make_response("Failed to unlock node '%s'. See logs for details.", node_id, 400)
+        except NodeNotFoundError as nnf:
+            _logger.exception(nnf)
+            return make_response("Node with id '%s' does not exist!" % node_id, 400)
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["DELETE"])
     def delete_node(board_id, node_id):

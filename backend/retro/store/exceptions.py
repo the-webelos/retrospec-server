@@ -12,3 +12,7 @@ class LockFailureError(Exception):
 
 class UnlockFailureError(Exception):
     pass
+
+
+class UnknownEventError(Exception):
+    pass

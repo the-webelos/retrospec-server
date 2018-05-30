@@ -4,6 +4,8 @@ import redis
 from datetime import timedelta
 from redis import WatchError
 from retro.store import Store
+from retro.store.event_processor_factory import EventProcessorFactory
+from retro.store.exceptions import NodeNotFoundError
 
 
 _logger = logging.getLogger(__name__)
@@ -23,6 +25,9 @@ class RedisStore(Store):
         node_dict = self.client.hgetall(node_id)
         for k, v in node_dict.items():
             node_dict[k] = json.loads(v)['value']
+
+        if not node_dict:
+            raise NodeNotFoundError("Node with id '%s' not found in database.", node_id)
 
         return self.node_from_dict(node_dict)
 
@@ -64,9 +69,8 @@ class RedisStore(Store):
             try:
                 _logger.debug("Update listener received event '%s'", event)
                 if event['type'] == 'pmessage' and event['pattern']:
-                    board_id = self.__parse_key_expired_event(event) if event['channel'].endswith('__:expired') \
-                        else event['channel'].partition('|')[2]
-                    if not message_cb(event, board_id):
+                    event_processor = EventProcessorFactory.get_event_processor(event, message_cb)
+                    if not event_processor.process():
                         break
             except:
                 _logger.exception("Error during subscription processing.")
