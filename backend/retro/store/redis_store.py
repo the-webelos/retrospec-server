@@ -53,28 +53,45 @@ class RedisStore(Store):
             pipe.execute()
 
     def update_listener(self, message_cb=lambda *x: True):
+        board_update_channel = 'board_update|*'
+        key_expiration_channel = '__key*__:expired'
+
         p = self.client.pubsub()
-        p.psubscribe('board_update|*')
+        p.psubscribe(board_update_channel)
+        p.psubscribe(key_expiration_channel)
 
         for event in p.listen():
             try:
                 _logger.debug("Update listener received event '%s'", event)
                 if event['type'] == 'pmessage' and event['pattern']:
-                    board_id = event['channel'].partition('|')[2]
+                    board_id = self.__parse_key_expired_event(event) if event['channel'].endswith('__:expired') \
+                        else event['channel'].partition('|')[2]
                     if not message_cb(event, board_id):
                         break
             except:
                 _logger.exception("Error during subscription processing.")
 
-        p.punsubscribe('board_update|*')
+        p.punsubscribe(board_update_channel)
+        p.punsubscribe(key_expiration_channel)
         _logger.info("Subscription terminated")
 
-    def get_node_lock(self, node_id):
-        return self.client.get(self._get_lock_key(node_id))
+    @staticmethod
+    def __parse_key_expired_event(event):
+        node_ids = event['data'].partition('NODELOCK.')[2].split('|')
+        if len(node_ids) == 2:
+            board_id, node_id = node_ids
+            event['data'] = json.dumps({'event_type': 'node_unlock',
+                                        'event_data': [node_id]})
+            return board_id
+        else:
+            raise Exception("Error parsing node lock expiration event '%s'." % event['data'])
+
+    def get_node_lock(self, board_id, node_id):
+        return self.client.get(self._get_lock_key(board_id, node_id))
 
     @staticmethod
-    def _get_lock_key(node_id):
-        return "NODELOCK.%s" % node_id
+    def _get_lock_key(board_id, node_id):
+        return "NODELOCK.%s|%s" % (board_id, node_id)
 
     @staticmethod
     def _get_publish_channel(board_id):
@@ -124,7 +141,7 @@ class RedisStore(Store):
 
                         # lock nodes
                         for node_id, lock_value in nodes.locks:
-                            lock_key = self._get_lock_key(node_id)
+                            lock_key = self._get_lock_key(board_id, node_id)
                             pipe.setex(lock_key, timedelta(hours=1), lock_value)
 
                         # publish locks
@@ -135,7 +152,7 @@ class RedisStore(Store):
 
                         # unlock nodes
                         for node_id in nodes.unlocks:
-                            lock_key = self._get_lock_key(node_id)
+                            lock_key = self._get_lock_key(board_id, node_id)
                             pipe.delete(lock_key)
 
                         # publish unlocks

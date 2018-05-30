@@ -106,13 +106,14 @@ def message_cb(message, board_id):
     should_keep_listening = True
     event = json.loads(message['data'])
     event_type = event.get('event_type')
+    event_data = event.get('event_data')
 
-    _logger.debug("Processing '%s' event for board '%s'.", event_type, board_id)
+    _logger.debug("Processing '%s' event for board '%s'. Event data: '%s'.", event_type, board_id, event_data)
 
     if event_type in ('node_update', 'node_del'):
-        socketio.emit(event_type, {"nodes": event['event_data']}, namespace=namespace, room=board_id)
+        socketio.emit(event_type, {"nodes": event_data}, namespace=namespace, room=board_id)
     elif event_type in ('node_lock', 'node_unlock'):
-        socketio.emit(event_type, {"node_id": event['event_data']}, namespace=namespace, room=board_id)
+        socketio.emit(event_type, {"node_id": event_data}, namespace=namespace, room=board_id)
     elif event_type == 'board_create':
         # nothing for websocket to do
         pass

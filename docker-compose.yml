@@ -26,5 +26,8 @@ services:
       - REDIS_PORT=6379
   redis:
     image: redis:4-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ${PWD}/backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"

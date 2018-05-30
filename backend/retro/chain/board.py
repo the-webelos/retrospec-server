@@ -150,7 +150,7 @@ class Board(object):
 
     def _edit_node(self, node_id, operations, lock, unlock, proxy):
         node = proxy.get_node(node_id)
-        node_lock = proxy.get_node_lock(node_id)
+        node_lock = proxy.get_node_lock(self.board_id, node_id)
         lock_nodes = []
         unlock_nodes = []
 
