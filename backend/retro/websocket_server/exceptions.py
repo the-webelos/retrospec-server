@@ -1,0 +1,2 @@
+class UnknownMessageType(KeyError):
+    pass

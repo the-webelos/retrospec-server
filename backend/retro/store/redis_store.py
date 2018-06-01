@@ -3,9 +3,11 @@ import logging
 import redis
 from datetime import timedelta
 from redis import WatchError
+from retro.events.event_processor_factory import EventProcessorFactory
 from retro.store import Store
-from retro.store.event_processor_factory import EventProcessorFactory
 from retro.store.exceptions import NodeNotFoundError
+from retro.websocket_server.websocket_message import BoardDeleteMessage, NodeLockMessage, NodeUnlockMessage, \
+    NodeUpdateMessage, NodeDeleteMessage
 
 
 _logger = logging.getLogger(__name__)
@@ -31,21 +33,19 @@ class RedisStore(Store):
 
         return self.node_from_dict(node_dict)
 
+    def get_board_ids(self):
+        return self.client.smembers(self.BOARD_SET_KEY)
+
     def create_board(self, board_node):
         with self.client.pipeline(True) as pipe:
             pipe.multi()
 
             pipe.sadd(self.BOARD_SET_KEY, board_node.id)
-            pipe.publish(self._get_publish_channel(board_node.id),
-                         json.dumps({"event_type": "board_create", "event_data": board_node.id}))
             pipe.hmset(board_node.id, self._get_node_map(board_node))
             pipe.publish(self._get_publish_channel(board_node.id),
-                         json.dumps({"event_type": "node_update", "event_data": board_node.to_dict()}))
+                         NodeUpdateMessage(board_node.to_dict()).encode())
 
             pipe.execute()
-
-    def get_board_ids(self):
-        return self.client.smembers(self.BOARD_SET_KEY)
 
     def remove_board(self, board_id):
         with self.client.pipeline(True) as pipe:
@@ -53,8 +53,7 @@ class RedisStore(Store):
 
             pipe.srem(self.BOARD_SET_KEY, board_id)
             pipe.publish(self._get_publish_channel(board_id),
-                         json.dumps({"event_type": "board_del", "event_data": board_id}))
-
+                         BoardDeleteMessage(board_id).encode())
             pipe.execute()
 
     def update_listener(self, message_cb=lambda *x: True):
@@ -69,7 +68,7 @@ class RedisStore(Store):
             try:
                 _logger.debug("Update listener received event '%s'", event)
                 if event['type'] == 'pmessage' and event['pattern']:
-                    event_processor = EventProcessorFactory.get_event_processor(event, message_cb)
+                    event_processor = EventProcessorFactory.get_event_processor(event, message_cb=message_cb)
                     if not event_processor.process():
                         break
             except:
@@ -79,23 +78,12 @@ class RedisStore(Store):
         p.punsubscribe(key_expiration_channel)
         _logger.info("Subscription terminated")
 
-    @staticmethod
-    def __parse_key_expired_event(event):
-        node_ids = event['data'].partition('NODELOCK.')[2].split('|')
-        if len(node_ids) == 2:
-            board_id, node_id = node_ids
-            event['data'] = json.dumps({'event_type': 'node_unlock',
-                                        'event_data': [node_id]})
-            return board_id
-        else:
-            raise Exception("Error parsing node lock expiration event '%s'." % event['data'])
-
-    def get_node_lock(self, board_id, node_id):
-        return self.client.get(self._get_lock_key(board_id, node_id))
+    def get_node_lock(self, node_id):
+        return self.client.get(self._get_lock_key(node_id))
 
     @staticmethod
-    def _get_lock_key(board_id, node_id):
-        return "NODELOCK.%s|%s" % (board_id, node_id)
+    def _get_lock_key(node_id):
+        return "NODELOCK.%s" % node_id
 
     @staticmethod
     def _get_publish_channel(board_id):
@@ -122,8 +110,7 @@ class RedisStore(Store):
                         # publish deletes
                         if nodes.deletes:
                             pipe.publish(self._get_publish_channel(board_id),
-                                         json.dumps({"event_type": "node_del",
-                                                     "event_data": [node.to_dict() for node in nodes.deletes]}))
+                                         NodeDeleteMessage([node.to_dict() for node in nodes.deletes]).encode())
 
                         # Update nodes
                         for node in nodes.updates:
@@ -140,30 +127,27 @@ class RedisStore(Store):
                         # publish updates
                         if nodes.updates:
                             pipe.publish(self._get_publish_channel(board_id),
-                                         json.dumps({"event_type": "node_update",
-                                                     "event_data": [node.to_dict() for node in nodes.updates]}))
+                                         NodeUpdateMessage([node.to_dict() for node in nodes.updates]).encode())
 
                         # lock nodes
                         for node_id, lock_value in nodes.locks:
-                            lock_key = self._get_lock_key(board_id, node_id)
+                            lock_key = self._get_lock_key(node_id)
                             pipe.setex(lock_key, timedelta(hours=1), lock_value)
 
                         # publish locks
                         if nodes.locks:
                             pipe.publish(self._get_publish_channel(board_id),
-                                         json.dumps({'event_type': 'node_lock',
-                                                     'event_data': [node_id for node_id, _ in nodes.locks]}))
+                                         NodeLockMessage([node_id for node_id, _ in nodes.locks]).encode())
 
                         # unlock nodes
                         for node_id in nodes.unlocks:
-                            lock_key = self._get_lock_key(board_id, node_id)
+                            lock_key = self._get_lock_key(node_id)
                             pipe.delete(lock_key)
 
                         # publish unlocks
                         if nodes.unlocks:
                             pipe.publish(self._get_publish_channel(board_id),
-                                         json.dumps({'event_type': 'node_unlock',
-                                                     'event_data': [node_id for node_id in nodes.unlocks]}))
+                                         NodeUnlockMessage([node_id for node_id in nodes.unlocks]).encode())
 
                         # update board version
                         pipe.hset(board_id, 'version', json.dumps({'value': board_version + 1}))

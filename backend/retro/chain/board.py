@@ -123,7 +123,7 @@ class Board(object):
             node.set_child(new_child.id)
             new_child.parent = node_id
 
-        nodes = set([node, new_parent, new_child, old_parent, old_child])
+        nodes = {node, new_parent, new_child, old_parent, old_child}
         return TransactionNodes(updates=[node for node in nodes if node is not None])
 
     def _remove_node(self, node_id, proxy):
@@ -146,11 +146,11 @@ class Board(object):
 
         nodes = self._collect_nodes(proxy, node_id, parent.id)
 
-        return TransactionNodes(updates=[parent], deletes=nodes.values())
+        return TransactionNodes(updates=[parent], deletes=list(nodes.values()))
 
     def _edit_node(self, node_id, operations, lock, unlock, proxy):
         node = proxy.get_node(node_id)
-        node_lock = proxy.get_node_lock(self.board_id, node_id)
+        node_lock = proxy.get_node_lock(node_id)
         lock_nodes = []
         unlock_nodes = []
 
@@ -174,10 +174,10 @@ class Board(object):
         return TransactionNodes(updates=[node], locks=lock_nodes, unlocks=unlock_nodes)
 
     def _collect_all(self, proxy):
-        return TransactionNodes(reads=self._collect_nodes(proxy, self.board_id).values())
+        return TransactionNodes(reads=list(self._collect_nodes(proxy, self.board_id).values()))
 
     def _delete_all(self, proxy):
-        return TransactionNodes(deletes=self._collect_nodes(proxy, self.board_id).values())
+        return TransactionNodes(deletes=list(self._collect_nodes(proxy, self.board_id).values()))
 
     def _collect_nodes(self, proxy, root_id, parent_id=None):
         collected = {}

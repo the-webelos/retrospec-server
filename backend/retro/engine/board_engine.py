@@ -14,8 +14,6 @@ class BoardEngine(object):
     def __init__(self, config, store=None):
         self.config = config
         self.store = store if store else get_store(config)
-
-        self.config.template_config = "/home/jlorusso/dev/retrospec-server/backend/conf/templates.cfg"
         self.templates = self._build_templates(self.config.template_config)
 
     def get_templates(self):
@@ -85,7 +83,7 @@ class BoardEngine(object):
         board = Board(self.store, board_id)
         return board.remove_node(node_id, cascade)
 
-    def update_listener(self, message_cb=lambda x: x):
+    def update_listener(self, message_cb=lambda *x: True):
         self.store.update_listener(message_cb=message_cb)
 
     def _build_templates(self, template_config):
@@ -108,4 +106,3 @@ class BoardEngine(object):
                 _logger.exception("Error parsing templates")
 
         return templates
-
