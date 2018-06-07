@@ -47,6 +47,17 @@ class WebsocketMessage(object):
                 "data": self._raw_data}
 
 
+class BoardCreateMessage(WebsocketMessage):
+    type = "board_create"
+
+    def __init__(self, board_id):
+        super(BoardCreateMessage, self).__init__(board_id)
+
+    @property
+    def data(self):
+        return {"board_id": self._raw_data}
+
+
 class BoardDeleteMessage(WebsocketMessage):
     type = "board_del"
 

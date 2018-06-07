@@ -7,8 +7,8 @@ from retro.chain.node import Node
 from retro.events.event_processor_factory import EventProcessorFactory
 from retro.store import Store
 from retro.store.exceptions import NodeNotFoundError
-from retro.websocket_server.websocket_message import BoardDeleteMessage, NodeLockMessage, NodeUnlockMessage, \
-    NodeUpdateMessage, NodeDeleteMessage
+from retro.websocket_server.websocket_message import BoardCreateMessage, BoardDeleteMessage, NodeLockMessage, \
+    NodeUnlockMessage, NodeUpdateMessage, NodeDeleteMessage
 
 
 _logger = logging.getLogger(__name__)
@@ -45,6 +45,8 @@ class RedisStore(Store):
             pipe.multi()
 
             pipe.sadd(self.BOARD_SET_KEY, board_node.id)
+            pipe.publish(self._get_publish_channel(board_node.id),
+                         BoardCreateMessage(board_node.id).encode())
             pipe.hmset(board_node.id, self._get_node_map(board_node))
             pipe.publish(self._get_publish_channel(board_node.id),
                          NodeUpdateMessage(board_node.to_dict()).encode())

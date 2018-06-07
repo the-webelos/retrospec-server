@@ -29,7 +29,7 @@ def buildapp_from_config(cfg):
     return _app, _socket_io
 
 
-cfg_ = Config.from_env()
+cfg_ = Config().load()
 app, socketio = buildapp_from_config(cfg_)
 board_engine = BoardEngine(cfg_)
 thread = None
@@ -110,5 +110,4 @@ def message_cb(message, board_id):
 
 
 if __name__ == "__main__":
-    cfg_ = Config.from_env()
     socketio.run(app, host=cfg_.websocket_host, port=cfg_.websocket_port, debug=False)

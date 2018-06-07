@@ -5,25 +5,18 @@ services:
     build:
         context: ./backend/
         dockerfile: Dockerfile.api
-    links:
-      - redis
     ports:
       - "80:80"
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - TEMPLATE_CONFIG=/app/conf/templates.cfg
+      - RETRO_HOME=/app
   websocket:
     build:
         context: ./backend/
         dockerfile: Dockerfile.websocket
-    links:
-      - redis
     ports:
       - "5124:5124"
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - RETRO_HOME=/app
   redis:
     image: redis:4-alpine
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]

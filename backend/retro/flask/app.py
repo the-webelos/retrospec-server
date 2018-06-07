@@ -14,7 +14,8 @@ def buildapp_from_config(cfg):
     return app
 
 
-app = buildapp_from_config(Config.from_env())
+cfg_ = Config().load()
+app = buildapp_from_config(cfg_)
 
 
 @app.route("/")
@@ -28,5 +29,4 @@ def static_file(path):
 
 
 if __name__ == "__main__":
-    cfg_ = Config.from_env()
     app.run(host=cfg_.retro_api_host, port=cfg_.retro_api_port, debug=True)

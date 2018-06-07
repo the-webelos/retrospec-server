@@ -24,8 +24,5 @@ class Store(object):
     def get_node(self, node_id):
         raise NotImplementedError
 
-    def board_update_listener(self, board_id, message_cb=None):
-        raise NotImplementedError
-
-    def stop_listener(self, board_id):
+    def update_listener(self, message_cb=None):
         raise NotImplementedError
