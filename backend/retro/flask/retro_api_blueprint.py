@@ -1,5 +1,6 @@
+import json
 import logging
-from flask import Blueprint, make_response, request
+from flask import Blueprint, make_response, request, Response
 from retro.chain.operations import OperationFactory
 from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError
 from .blueprint_helpers import make_response_json
@@ -60,6 +61,13 @@ def build_blueprint(board_engine):
         deleted_nodes = board_engine.delete_board(board_id)
 
         return "Deleted %s nodes" % len(deleted_nodes)
+
+    @blueprint.route("/api/v1/boards/<board_id>/export", methods=["GET"])
+    def export_board(board_id):
+        board_nodes = board_engine.get_board(board_id)
+
+        return Response(json.dumps({"nodes": [node.to_dict() for node in board_nodes]}), mimetype="application/json",
+                        headers={"Content-Disposition": "attachment;filename=%s" % board_id})
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes", methods=["POST"])
     def create_node(board_id):
