@@ -70,7 +70,9 @@ def build_blueprint(board_engine):
         # we could support bulk imports in the future without having to change the data structure.
         boards_json = args.get("boards", {})
         if not boards_json:
-            return make_response("Invalid JSON provided. Must supply boards to import.", 400)
+            missing_boards_msg = "Invalid JSON provided. Must supply boards to import."
+            _logger.error(missing_boards_msg)
+            return make_response(missing_boards_msg, 400)
 
         board_id = list(boards_json.keys())[0]
         board_json = boards_json.get(board_id, {})
@@ -81,8 +83,9 @@ def build_blueprint(board_engine):
         force = args.get("force", "false").lower() == "true"
 
         if not board_node:
-            return make_response("Invalid JSON provided. Must supply 'board_node' entry for board '%s'." %
-                                 board_id, 400)
+            missing_board_node_msg = "Invalid JSON provided. Must supply 'board_node' entry for board '%s'." % board_id
+            _logger.error(missing_board_node_msg)
+            return make_response(missing_board_node_msg, 400)
 
         try:
             nodes = board_engine.import_board(board_node, child_nodes, copy=copy, force=force)
