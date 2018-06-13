@@ -159,7 +159,7 @@ class TestRetroApi(unittest.TestCase):
         # NOTE: I don't like this test, but wanted to at least get some API level import coverage. We should consider
         # augmenting this possibly after we finalize our decision on how to deal with column ordering. - JL
         board_id = "e8fad57d-e2fd-4145-9586-21b404117dcc"
-        self._import_board({"boards": self.import_board_json}, copy=False, force=True)
+        self._import_board(self.import_board_json, copy=False, force=True)
         board_nodes = self._get_board(board_id).get("nodes")
         expected_nodes_json = self.import_board_json.get(board_id)
         expected_nodes = [expected_nodes_json.get("board_node")] + expected_nodes_json.get("child_nodes")
@@ -203,11 +203,13 @@ class TestRetroApi(unittest.TestCase):
 
     def _import_board(self, import_board_json, copy=False, force=False):
         route = "/api/v1/boards/import"
+        data = {"boards": import_board_json.copy()}
         if copy:
-            import_board_json["copy"] = "true"
+            data["copy"] = "true"
         if force:
-            import_board_json["force"] = "true"
-        req = requests.post(self._build_url(route), json=import_board_json)
+            data["force"] = "true"
+
+        req = requests.post(self._build_url(route), json=data)
         req.raise_for_status()
 
         return req.json()
