@@ -106,6 +106,7 @@ def build_blueprint(board_engine):
                       child_nodes: [{}, {}...]}
         }
         """
+        filename = request.args.get("filename", board_id)
         board_nodes = board_engine.get_board(board_id)
         board_node = board_nodes.pop(0)
 
@@ -113,7 +114,7 @@ def build_blueprint(board_engine):
             board_id: {"board_node": board_node.to_dict(),
                        "child_nodes": [node.to_dict() for node in board_nodes]}}),
             mimetype="application/json",
-            headers={"Content-Disposition": "attachment;filename=%s" % board_id})
+            headers={"Content-Disposition": "attachment;filename=%s" % filename})
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes", methods=["POST"])
     def create_node(board_id):
