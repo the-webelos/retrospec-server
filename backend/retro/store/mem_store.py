@@ -1,5 +1,6 @@
 import threading
 
+from retro.chain.node import Node
 from retro.store import Store
 
 
@@ -16,7 +17,7 @@ class MemStore(Store):
             node_dict = self.nodes[node_id].copy()
             node_dict['id'] = node_id
 
-            return self.node_from_dict(node_dict)
+            return Node.from_dict(node_dict)
 
     def get_node_lock(self, node_id):
         return self.node_locks.get(node_id)
@@ -47,30 +48,32 @@ class MemStore(Store):
 
     def transaction(self, board_id, func):
         with self.lock:
-            board_version = self.nodes[board_id]['version']
-
             nodes = func(self)
 
-            for node in nodes.updates:
-                node.version = board_version + 1
+            board_version = self.nodes[board_id]['version']
 
-                # update orig version if needed
-                if node.orig_version is None:
-                    node.orig_version = node.version
+            if nodes.updates or nodes.deletes or nodes.locks or nodes.unlocks:
+                for node in nodes.deletes:
+                    del self.nodes[node.id]
 
-                node_dict = node.to_dict()
+                for node in nodes.updates:
+                    node.version = board_version + 1
 
-                self.nodes[node.id] = node_dict
+                    # update orig version if needed
+                    if node.orig_version is None:
+                        node.orig_version = node.version
 
-                self.nodes[board_id]['version'] = board_version + 1
+                    node_dict = node.to_dict()
 
-            for node in nodes.deletes:
-                del self.nodes[node.id]
+                    self.nodes[node.id] = node_dict
 
-            for node_id, lock_val in nodes.locks:
-                self.node_locks[node_id] = lock_val
+                for node_id, lock_val in nodes.locks:
+                    self.node_locks[node_id] = lock_val
 
-            for node_id in nodes.unlocks:
-                self.node_locks.pop(node_id, None)
+                for node_id in nodes.unlocks:
+                    self.node_locks.pop(node_id, None)
+
+                # update board version
+                self.nodes[board_id]['version'] += 1
 
             return nodes

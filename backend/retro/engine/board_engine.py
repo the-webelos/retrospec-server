@@ -2,7 +2,8 @@ import json
 import logging
 
 from retro.chain.board import Board
-from retro.chain.node import BoardNode
+from retro.chain.node import BoardNode, Node
+from retro.store.exceptions import ExistingNodeError
 from retro.utils import get_store
 
 _logger = logging.getLogger(__name__)
@@ -43,6 +44,32 @@ class BoardEngine(object):
                 parent_id = _add_node(parent_id, node_content)
 
         return nodes
+
+    def import_board(self, board_dict, child_dicts, copy=False, force=False):
+        def _skip_node_transform(*_args, node):
+            return node
+
+        transform_func = _skip_node_transform
+        board_node = Node.from_dict(board_dict)
+
+        if copy:
+            # If we're copying a board, we need to generate a new board_id, and update all the existing ids to
+            # reference the new board.
+            board_node.id = self.store.next_node_id()
+            transform_func = self._copy_node_and_update_ids
+            board_node = transform_func(board_node.id, board_node)
+
+        # Create the board. This is done outside of the transaction because redis watches the board_node to ensure the
+        # transaction can be executed without race conditions.
+        if not force and self.has_board(board_node.id):
+            raise ExistingNodeError("Board with id '%s' already exists." % board_node.id)
+
+        self.store.create_board(board_node)
+        board = Board(self.store, board_node.id)
+
+        updated_nodes = board.import_nodes(child_dicts, transform_func=transform_func)
+
+        return [self.store.get_node(board_node.id)] + updated_nodes
 
     def get_board(self, board_id):
         board = Board(self.store, board_id)
@@ -106,3 +133,23 @@ class BoardEngine(object):
                 _logger.exception("Error parsing templates")
 
         return templates
+
+    @staticmethod
+    def _copy_node_and_update_ids(board_id, node):
+        def _get_updated_node_id(_node_id):
+            parts = _node_id.partition("|")
+            return "%s%s%s" % (board_id, parts[1], parts[2])
+
+        new_node = node.copy(version=1, orig_version=None)
+        new_node.id = _get_updated_node_id(new_node.id)
+
+        if new_node.parent:
+            new_node.parent = _get_updated_node_id(new_node.parent)
+        if getattr(new_node, "child", None):
+            new_node.child = _get_updated_node_id(new_node.child)
+        if getattr(new_node, "children", None):
+            new_node.children = {_get_updated_node_id(column_id) for column_id in new_node.children}
+        if getattr(new_node, "column_header", None):
+            new_node.column_header = _get_updated_node_id(new_node.column_header)
+
+        return new_node

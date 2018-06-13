@@ -24,36 +24,36 @@ class TestBoard(unittest.TestCase):
 
         self.assertEqual(9, len(chain.nodes()))
 
-        self.assertEqual(BoardNode(id='root', content={"test": "RootContent"}, version=1, children={'column_a', 'column_b'}),
+        self.assertEqual(BoardNode('root', content={"test": "RootContent"}, version=1, children={'column_a', 'column_b'}),
                          chain.get_node('root'))
 
         self.assertEqual(ColumnHeaderNode(id='column_a', content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
                          chain.get_node('column_a'))
 
-        self.assertEqual(ContentNode(id='node_1', content={"test": "Node1"}, version=1, parent="column_a",
+        self.assertEqual(ContentNode('node_1', content={"test": "Node1"}, version=1, parent="column_a",
                                      child="node_2", column_header="column_a"),
                          chain.get_node('node_1'))
 
-        self.assertEqual(ContentNode(id='node_2', content={"test": "Node2"}, version=1, parent="node_1",
+        self.assertEqual(ContentNode('node_2', content={"test": "Node2"}, version=1, parent="node_1",
                                      child="node_3", column_header="column_a"),
                          chain.get_node('node_2'))
 
-        self.assertEqual(ContentNode(id='node_3', content={"test": "Node3"}, version=1, parent="node_2",
+        self.assertEqual(ContentNode('node_3', content={"test": "Node3"}, version=1, parent="node_2",
                                      child="node_4", column_header="column_a"),
                          chain.get_node('node_3'))
 
-        self.assertEqual(ContentNode(id='node_4', content={"test": "Node4"}, version=1, parent="node_3",
+        self.assertEqual(ContentNode('node_4', content={"test": "Node4"}, version=1, parent="node_3",
                                      child=None, column_header="column_a"),
                          chain.get_node('node_4'))
 
         self.assertEqual(ColumnHeaderNode(id='column_b', content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
                          chain.get_node('column_b'))
 
-        self.assertEqual(ContentNode(id='node_5', content={"test": "Node5"}, version=1, parent="column_b",
+        self.assertEqual(ContentNode('node_5', content={"test": "Node5"}, version=1, parent="column_b",
                                      child="node_6", column_header="column_b"),
                          chain.get_node('node_5'))
 
-        self.assertEqual(ContentNode(id='node_6', content={"test": "Node6"}, version=1, parent="node_5",
+        self.assertEqual(ContentNode('node_6', content={"test": "Node6"}, version=1, parent="node_5",
                                      child=None, column_header="column_b"),
                          chain.get_node('node_6'))
 

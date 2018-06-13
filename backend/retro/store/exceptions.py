@@ -16,3 +16,7 @@ class LockFailureError(Exception):
 
 class UnlockFailureError(Exception):
     pass
+
+
+class ExistingNodeError(Exception):
+    pass

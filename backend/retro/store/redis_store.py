@@ -3,6 +3,7 @@ import logging
 import redis
 from datetime import timedelta
 from redis import WatchError
+from retro.chain.node import Node
 from retro.events.event_processor_factory import EventProcessorFactory
 from retro.store import Store
 from retro.store.exceptions import NodeNotFoundError
@@ -31,7 +32,10 @@ class RedisStore(Store):
         if not node_dict:
             raise NodeNotFoundError("Node with id '%s' not found in database.", node_id)
 
-        return self.node_from_dict(node_dict)
+        return Node.from_dict(node_dict)
+
+    def get_node_lock(self, node_id):
+        return self.client.get(self._get_lock_key(node_id))
 
     def get_board_ids(self):
         return self.client.smembers(self.BOARD_SET_KEY)
@@ -78,9 +82,6 @@ class RedisStore(Store):
         p.punsubscribe(key_expiration_channel)
         _logger.info("Subscription terminated")
 
-    def get_node_lock(self, node_id):
-        return self.client.get(self._get_lock_key(node_id))
-
     @staticmethod
     def _get_lock_key(node_id):
         return "NODELOCK.%s" % node_id
@@ -95,9 +96,9 @@ class RedisStore(Store):
                 try:
                     pipe.watch(board_id)
 
-                    board_version = json.loads(pipe.hget(board_id, 'version'))['value']
-
                     nodes = func(RedisStore(client=pipe))
+
+                    board_version = json.loads(pipe.hget(board_id, 'version'))['value']
 
                     if nodes.updates or nodes.deletes or nodes.locks or nodes.unlocks:
                         # start transaction
@@ -155,8 +156,8 @@ class RedisStore(Store):
                         pipe.execute()
 
                     return nodes
-                except WatchError:
-                    _logger.info("Transaction failed")
+                except WatchError as err:
+                    _logger.info("Transaction failed. Reason: %s" % repr(err))
 
     @staticmethod
     def _get_node_map(node):

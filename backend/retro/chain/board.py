@@ -1,5 +1,5 @@
 from functools import partial
-from retro.chain.node import ColumnHeaderNode, ContentNode
+from retro.chain.node import ColumnHeaderNode, ContentNode, Node
 from retro.store import TransactionNodes
 from retro.store.exceptions import NodeLockedError, UnlockFailureError
 
@@ -43,6 +43,10 @@ class Board(object):
             nodes = self.store.transaction(self.board_id, partial(self._remove_node, node_id))
 
         return nodes.deletes
+
+    def import_nodes(self, node_dicts, transform_func=lambda *x, node: node):
+        nodes = self.store.transaction(self.board_id, partial(self._import_nodes, node_dicts, transform_func))
+        return nodes.updates
 
     def _add_node(self, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
@@ -172,6 +176,11 @@ class Board(object):
             operation.execute(node)
 
         return TransactionNodes(updates=[node], locks=lock_nodes, unlocks=unlock_nodes)
+
+    def _import_nodes(self, node_dicts, transform_func, _proxy):
+        # Deserialize all node JSON to actual Node objects, and transform their properties if necessary
+        nodes = [transform_func(self.board_id, node=Node.from_dict(node_dict)) for node_dict in node_dicts]
+        return TransactionNodes(updates=nodes)
 
     def _collect_all(self, proxy):
         return TransactionNodes(reads=list(self._collect_nodes(proxy, self.board_id).values()))

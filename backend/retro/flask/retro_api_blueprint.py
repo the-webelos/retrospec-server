@@ -2,7 +2,7 @@ import json
 import logging
 from flask import Blueprint, make_response, request, Response
 from retro.chain.operations import OperationFactory
-from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError
+from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError, ExistingNodeError
 from .blueprint_helpers import make_response_json
 
 _logger = logging.getLogger(__name__)
@@ -62,12 +62,58 @@ def build_blueprint(board_engine):
 
         return "Deleted %s nodes" % len(deleted_nodes)
 
+    @blueprint.route("/api/v1/boards/import", methods=["POST"])
+    def import_board():
+        args = request.json or {}
+
+        # For now, we expect a single board_id key in the boards json. The export structure was designed this way so
+        # we could support bulk imports in the future without having to change the data structure.
+        boards_json = args.get("boards", {})
+        if not boards_json:
+            return make_response("Invalid JSON provided. Must supply boards to import.", 400)
+
+        board_id = list(boards_json.keys())[0]
+        board_json = boards_json.get(board_id, {})
+
+        board_node = board_json.get("board_node")
+        child_nodes = board_json.get("child_nodes", [])
+        copy = args.get("copy", "false").lower() == "true"
+        force = args.get("force", "false").lower() == "true"
+
+        if not board_node:
+            return make_response("Invalid JSON provided. Must supply 'board_node' entry for board '%s'." %
+                                 board_id, 400)
+
+        try:
+            nodes = board_engine.import_board(board_node, child_nodes, copy=copy, force=force)
+            response = make_response_json({"nodes": [node.to_dict() for node in nodes]})
+        except ExistingNodeError as ene:
+            _logger.error(str(ene))
+            response = make_response("%s %s" % (str(ene), "Rerun with force=true to overwrite existing board."), 419)
+
+        return response
+
     @blueprint.route("/api/v1/boards/<board_id>/export", methods=["GET"])
     def export_board(board_id):
-        board_nodes = board_engine.get_board(board_id)
+        """
+        Exports a board to a JSON file that can be imported later.
 
-        return Response(json.dumps({"nodes": [node.to_dict() for node in board_nodes]}), mimetype="application/json",
-                        headers={"Content-Disposition": "attachment;filename=%s" % board_id})
+        :param board_id: ID of the board to be exported
+        :return: A JSON file representing the requested board.
+
+        Structure for the export is:
+        {<board_id>: {board_node: {},
+                      child_nodes: [{}, {}...]}
+        }
+        """
+        board_nodes = board_engine.get_board(board_id)
+        board_node = board_nodes.pop(0)
+
+        return Response(json.dumps({
+            board_id: {"board_node": board_node.to_dict(),
+                       "child_nodes": [node.to_dict() for node in board_nodes]}}),
+            mimetype="application/json",
+            headers={"Content-Disposition": "attachment;filename=%s" % board_id})
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes", methods=["POST"])
     def create_node(board_id):
@@ -107,7 +153,8 @@ def build_blueprint(board_engine):
                     return make_response("Cannot provide lock and unlock in the same request.", 400)
                 nodes = [board_engine.edit_node(
                     board_id, node_id,
-                    [OperationFactory().build_operation(o.get("operation", "SET"), o.get("field"), o.get("value")) for o in operations],
+                    [OperationFactory().build_operation(
+                        o.get("operation", "SET"), o.get("field"), o.get("value")) for o in operations],
                     lock, unlock)]
             else:
                 return make_response("No valid arguments provided. Must send at least one of %s" % valid_args, 400)
