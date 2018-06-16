@@ -1,4 +1,4 @@
-from retro.chain.exceptions import UnknownNodeTypeError
+from backend.retro.chain.exceptions import UnknownNodeTypeError
 
 NODE_REGISTRY = {}
 
