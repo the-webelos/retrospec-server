@@ -4,11 +4,9 @@ python:
   - "3.6"
 cache: pip
 
-install:
-  - pip install -r backend/requirements.txt
-  - pip install -r backend/test/requirements.txt
+before_script:
+  - pip3.6 install coverage
+  - python3.6 -m coverage run --source=api_router setup.py test
 
 script:
-  - PYTHONPATH=backend python backend/test/chain/test_board.py
-  - PYTHONPATH=backend python backend/test/flask/test_retro_api.py
-  - PYTHONPATH=backend python backend/test/store/test_redis_store.py
+  - python3.6 -m coverage report

@@ -1,9 +1,9 @@
 
 import unittest
-from retro.store.mem_store import MemStore
-from retro.chain.board import Board
-from retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
-from retro.chain.operations import SetOperation, IncrementOperation, DeleteOperation
+from backend.retro.store.mem_store import MemStore
+from backend.retro.chain.board import Board
+from backend.retro.chain.node import ColumnHeaderNode, ContentNode, BoardNode
+from backend.retro.chain.operations import SetOperation, IncrementOperation, DeleteOperation
 
 
 class TestBoard(unittest.TestCase):

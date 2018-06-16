@@ -1,7 +1,7 @@
 from pprint import pprint
 import requests
 import unittest
-from retro.utils.config import Config
+from backend.retro.utils.config import Config
 
 
 class TestRetroApi(unittest.TestCase):

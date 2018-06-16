@@ -1,9 +1,9 @@
 import unittest
-from retro.chain.node import Node, BoardNode, ContentNode
-from retro.engine.board_engine import BoardEngine
-from retro.store.exceptions import ExistingNodeError
-from retro.store.mem_store import MemStore
-from retro.utils.config import Config
+from backend.retro.chain.node import Node, BoardNode, ContentNode
+from backend.retro.engine.board_engine import BoardEngine
+from backend.retro.store.exceptions import ExistingNodeError
+from backend.retro.store.mem_store import MemStore
+from backend.retro.utils.config import Config
 
 
 class TestBoardEngine(unittest.TestCase):

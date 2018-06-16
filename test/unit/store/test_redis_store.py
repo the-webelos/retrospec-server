@@ -2,9 +2,9 @@
 from functools import partial
 import unittest
 
-from retro.store import TransactionNodes
-from retro.store.redis_store import RedisStore
-from retro.chain.node import ColumnHeaderNode, BoardNode
+from backend.retro.store import TransactionNodes
+from backend.retro.store.redis_store import RedisStore
+from backend.retro.chain.node import ColumnHeaderNode, BoardNode
 from helpers import get_redis_container, get_redis_config
 
 
