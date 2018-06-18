@@ -3,7 +3,7 @@ version: '3'
 services:
   api:
     build:
-        context: ./backend/
+        context: ./
         dockerfile: Dockerfile.api
     links:
       - redis
@@ -15,7 +15,7 @@ services:
       - TEMPLATE_CONFIG=/app/conf/templates.cfg
   websocket:
     build:
-        context: ./backend/
+        context: ./
         dockerfile: Dockerfile.websocket
     links:
       - redis
@@ -28,6 +28,6 @@ services:
     image: redis:4-alpine
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
-      - ${PWD}/backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ${PWD}/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"

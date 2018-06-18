@@ -6,6 +6,6 @@ COPY ./retro /app/retro
 COPY ./uwsgi.ini /app
 COPY ./conf /app/conf
 
-COPY requirements.txt /app/requirements.txt
+COPY setup.py /app/setup.py
 RUN pip install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN python3.6 /app/setup.py install
