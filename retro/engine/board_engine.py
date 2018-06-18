@@ -1,10 +1,10 @@
 import json
 import logging
 
-from backend.retro.chain.board import Board
-from backend.retro.chain.node import BoardNode, Node
-from backend.retro.store.exceptions import ExistingNodeError
-from backend.retro.utils import get_store
+from retro.chain.board import Board
+from retro.chain.node import BoardNode, Node
+from retro.store.exceptions import ExistingNodeError
+from retro.utils import get_store
 
 _logger = logging.getLogger(__name__)
 

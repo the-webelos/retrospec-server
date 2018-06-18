@@ -1,6 +1,6 @@
 import json
 import logging
-from backend.retro.websocket_server.exceptions import UnknownMessageType
+from retro.websocket_server.exceptions import UnknownMessageType
 
 _logger = logging.getLogger(__name__)
 

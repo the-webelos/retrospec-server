@@ -2,7 +2,7 @@ import datetime
 import decimal
 import json
 from flask import make_response
-from backend.retro.utils import timedelta_total_seconds
+from retro.utils import timedelta_total_seconds
 
 
 def default_encoder(obj):

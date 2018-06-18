@@ -1,8 +1,8 @@
 from flask import Flask
-from backend.retro.engine.board_engine import BoardEngine
-from backend.retro.flask import retro_api_blueprint
-from backend.retro.utils.config import Config
-from backend.retro.utils.retro_logging import setup_basic_logging
+from retro.engine.board_engine import BoardEngine
+from retro.flask import retro_api_blueprint
+from retro.utils.config import Config
+from retro.utils.retro_logging import setup_basic_logging
 
 
 def buildapp_from_config(cfg):

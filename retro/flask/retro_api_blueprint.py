@@ -1,8 +1,8 @@
 import json
 import logging
 from flask import Blueprint, make_response, request, Response
-from backend.retro.chain.operations import OperationFactory
-from backend.retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError, ExistingNodeError
+from retro.chain.operations import OperationFactory
+from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError, ExistingNodeError
 from .blueprint_helpers import make_response_json
 
 _logger = logging.getLogger(__name__)

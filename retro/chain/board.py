@@ -1,7 +1,7 @@
 from functools import partial
-from backend.retro.chain.node import ColumnHeaderNode, ContentNode, Node
-from backend.retro.store import TransactionNodes
-from backend.retro.store.exceptions import NodeLockedError, UnlockFailureError
+from retro.chain.node import ColumnHeaderNode, ContentNode, Node
+from retro.store import TransactionNodes
+from retro.store.exceptions import NodeLockedError, UnlockFailureError
 
 
 class Board(object):

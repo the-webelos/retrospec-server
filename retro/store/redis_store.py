@@ -3,11 +3,11 @@ import logging
 import redis
 from datetime import timedelta
 from redis import WatchError
-from backend.retro.chain.node import Node
-from backend.retro.events.event_processor_factory import EventProcessorFactory
-from backend.retro.store import Store
-from backend.retro.store.exceptions import NodeNotFoundError
-from backend.retro.websocket_server.websocket_message import BoardDeleteMessage, NodeLockMessage, NodeUnlockMessage, \
+from retro.chain.node import Node
+from retro.events.event_processor_factory import EventProcessorFactory
+from retro.store import Store
+from retro.store.exceptions import NodeNotFoundError
+from retro.websocket_server.websocket_message import BoardDeleteMessage, NodeLockMessage, NodeUnlockMessage, \
     NodeUpdateMessage, NodeDeleteMessage
 
 

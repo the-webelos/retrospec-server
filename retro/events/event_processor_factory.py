@@ -1,6 +1,6 @@
-from backend.retro.events.exceptions import UnknownEventError
-from backend.retro.store.exceptions import NodeParseError
-from backend.retro.websocket_server.websocket_message import WebsocketMessage, NodeUnlockMessage
+from retro.events.exceptions import UnknownEventError
+from retro.store.exceptions import NodeParseError
+from retro.websocket_server.websocket_message import WebsocketMessage, NodeUnlockMessage
 
 
 class EventProcessorFactory(object):

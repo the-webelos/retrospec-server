@@ -1,7 +1,7 @@
 import threading
 
-from backend.retro.chain.node import Node
-from backend.retro.store import Store
+from retro.chain.node import Node
+from retro.store import Store
 
 
 class MemStore(Store):

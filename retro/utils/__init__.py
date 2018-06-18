@@ -1,5 +1,5 @@
-from backend.retro.store.mem_store import MemStore
-from backend.retro.store.redis_store import RedisStore
+from retro.store.mem_store import MemStore
+from retro.store.redis_store import RedisStore
 
 
 store = None
