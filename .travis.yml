@@ -6,7 +6,7 @@ cache: pip
 
 before_script:
   - pip3.6 install coverage
-  - PYTHONPATH=backend python3.6 -m coverage run --source=api_router setup.py test
+  - python3.6 -m coverage run --source=retro setup.py test
 
 script:
   - python3.6 -m coverage report
