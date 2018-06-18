@@ -9,6 +9,7 @@ install:
   - pip install -r backend/test/requirements.txt
 
 script:
-  - PYTHONPATH=backend python backend/test/chain/test_board.py
-  - PYTHONPATH=backend python backend/test/flask/test_retro_api.py
-  - PYTHONPATH=backend python backend/test/store/test_redis_store.py
+  - PYTHONPATH=backend python backend/test/unit/chain/test_board.py
+  - PYTHONPATH=backend python backend/test/unit/engine/test_board_engine.py
+  - PYTHONPATH=backend python backend/test/unit/store/test_redis_store.py
+  - PYTHONPATH=backend python backend/test/integration/flask/test_retro_api.py
