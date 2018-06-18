@@ -56,3 +56,4 @@ $RECYCLE.BIN/
 *.lnk
 
 .vscode/
+.pytest_cache/

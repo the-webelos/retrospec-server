@@ -27,7 +27,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(BoardNode('root', content={"test": "RootContent"}, version=1, children={'column_a', 'column_b'}),
                          chain.get_node('root'))
 
-        self.assertEqual(ColumnHeaderNode(id='column_a', content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
+        self.assertEqual(ColumnHeaderNode('column_a', content={"test": "ColumnA"}, version=1, parent="root", child="node_1"),
                          chain.get_node('column_a'))
 
         self.assertEqual(ContentNode('node_1', content={"test": "Node1"}, version=1, parent="column_a",
@@ -46,7 +46,7 @@ class TestBoard(unittest.TestCase):
                                      child=None, column_header="column_a"),
                          chain.get_node('node_4'))
 
-        self.assertEqual(ColumnHeaderNode(id='column_b', content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
+        self.assertEqual(ColumnHeaderNode('column_b', content={"test": "ColumnB"}, version=1, parent="root", child="node_5"),
                          chain.get_node('column_b'))
 
         self.assertEqual(ContentNode('node_5', content={"test": "Node5"}, version=1, parent="column_b",

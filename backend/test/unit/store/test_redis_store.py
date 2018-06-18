@@ -5,7 +5,7 @@ import unittest
 from retro.store import TransactionNodes
 from retro.store.redis_store import RedisStore
 from retro.chain.node import ColumnHeaderNode, BoardNode
-from helpers import get_redis_container, get_redis_config
+from test.helpers import get_redis_container, get_redis_config
 
 
 class TestRedisStore(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestRedisStore(unittest.TestCase):
 
     def setUp(self):
         self.store = RedisStore(**get_redis_config(self.redis_container))
-        self.store.create_board(BoardNode(id='root', content={"name": "test board"}))
+        self.store.create_board(BoardNode('root', content={"name": "test board"}))
 
     def tearDown(self):
         # remove all keys from redis

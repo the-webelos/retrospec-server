@@ -93,6 +93,10 @@ class BoardEngine(object):
 
         return boards
 
+    def get_node(self, board_id, node_id):
+        board = Board(self.store, board_id)
+        return board.get_node(node_id)
+
     def add_node(self, board_id, parent_id, content=None):
         board = Board(self.store, board_id)
 
