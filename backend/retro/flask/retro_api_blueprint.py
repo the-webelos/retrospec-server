@@ -133,6 +133,12 @@ def build_blueprint(board_engine):
 
         return make_response_json(node.to_dict())
 
+    @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["GET"])
+    def get_node(board_id, node_id):
+        node = board_engine.get_node(board_id, node_id)
+
+        return make_response_json(node.to_dict())
+
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>", methods=["PUT"])
     def update_node(board_id, node_id):
         return _update_node(board_id, node_id, request.json or {})

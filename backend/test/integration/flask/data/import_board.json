@@ -1,0 +1,133 @@
+{"e8fad57d-e2fd-4145-9586-21b404117dcc": {
+  "board_node": {
+    "type": "Board",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc",
+    "content": {
+      "name": "test"
+    },
+    "version": 12,
+    "orig_version": 2,
+    "children": ["e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39", "e8fad57d-e2fd-4145-9586-21b404117dcc|12a7114d-b7fe-4832-bbfb-f84bde2a9c84", "e8fad57d-e2fd-4145-9586-21b404117dcc|cb86d576-1ee9-427e-bcee-4d90c46c9189", "e8fad57d-e2fd-4145-9586-21b404117dcc|6b6958df-6c1b-49e5-804b-c3547e935579"]
+  },
+  "child_nodes": [{
+    "type": "ColumnHeader",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39",
+    "content": {
+      "name": "Is Not"
+    },
+    "version": 6,
+    "orig_version": 5,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|ecec8fb0-8984-4ac3-8e2b-c9680c1a119c"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|ecec8fb0-8984-4ac3-8e2b-c9680c1a119c",
+    "content": {
+      "text": "Bad stuff"
+    },
+    "version": 7,
+    "orig_version": 6,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|eb0ae90f-82e2-41cb-9a68-8e4ae532a801",
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|eb0ae90f-82e2-41cb-9a68-8e4ae532a801",
+    "content": {
+      "text": "Other bad stuff"
+    },
+    "version": 8,
+    "orig_version": 7,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|ecec8fb0-8984-4ac3-8e2b-c9680c1a119c",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|08f2a6a4-00df-423d-bded-223581bfd40f",
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|08f2a6a4-00df-423d-bded-223581bfd40f",
+    "content": {
+      "text": "More bad stuff"
+    },
+    "version": 8,
+    "orig_version": 8,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|eb0ae90f-82e2-41cb-9a68-8e4ae532a801",
+    "child": null,
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|a600a5ef-1d32-458f-80af-6f0b7ccdce39"
+    }, {
+    "type": "ColumnHeader",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|12a7114d-b7fe-4832-bbfb-f84bde2a9c84",
+    "content": {
+    "name": "Does"
+    },
+    "version": 10,
+    "orig_version": 9,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|821ecd19-8667-4894-a2fc-fb0943157080"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|821ecd19-8667-4894-a2fc-fb0943157080",
+    "content": {
+      "text": "Did some great work"
+    },
+    "version": 11,
+    "orig_version": 10,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|12a7114d-b7fe-4832-bbfb-f84bde2a9c84",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|9dd0da4f-f7e5-4d5c-9cdf-7aa8ec014a12",
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|12a7114d-b7fe-4832-bbfb-f84bde2a9c84"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|9dd0da4f-f7e5-4d5c-9cdf-7aa8ec014a12",
+    "content": {
+      "text": "Did the best work",
+      "votes": 3
+    },
+    "version": 11,
+    "orig_version": 11,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|821ecd19-8667-4894-a2fc-fb0943157080",
+    "child": null,
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|12a7114d-b7fe-4832-bbfb-f84bde2a9c84"
+    }, {
+    "type": "ColumnHeader",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|cb86d576-1ee9-427e-bcee-4d90c46c9189",
+    "content": {
+      "name": "Does Not"
+    },
+    "version": 12,
+    "orig_version": 12,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc",
+    "child": null
+    }, {
+    "type": "ColumnHeader",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|6b6958df-6c1b-49e5-804b-c3547e935579",
+    "content": {
+      "name": "Is"
+    },
+    "version": 3,
+    "orig_version": 2,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|46884492-d2aa-4013-94a9-a2901aeb406c"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|46884492-d2aa-4013-94a9-a2901aeb406c",
+    "content": {
+      "text": "Good stuff",
+      "votes": 1
+    },
+    "version": 4,
+    "orig_version": 3,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|6b6958df-6c1b-49e5-804b-c3547e935579",
+    "child": "e8fad57d-e2fd-4145-9586-21b404117dcc|b583c4db-0b8e-47ed-8628-9c62af959fef",
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|6b6958df-6c1b-49e5-804b-c3547e935579"
+    }, {
+    "type": "Content",
+    "id": "e8fad57d-e2fd-4145-9586-21b404117dcc|b583c4db-0b8e-47ed-8628-9c62af959fef",
+    "content": {
+      "text": "Other good stuff"
+    },
+    "version": 4,
+    "orig_version": 4,
+    "parent": "e8fad57d-e2fd-4145-9586-21b404117dcc|46884492-d2aa-4013-94a9-a2901aeb406c",
+    "child": null,
+    "column_header": "e8fad57d-e2fd-4145-9586-21b404117dcc|6b6958df-6c1b-49e5-804b-c3547e935579"
+    }]
+  }
+}
