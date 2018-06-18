@@ -6,9 +6,9 @@ RUN mkdir /app
 
 COPY ./retro /app/retro
 
-COPY requirements.txt /app/requirements.txt
+COPY setup.py /app/setup.py
 RUN pip install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN python3.6 /app/setup.py install
 
 ENV PYTHONPATH="$PYTHONPATH:/app"
 
