@@ -1,26 +1,38 @@
 
 version: '3'
 services:
+  nginx:
+    image: nginx:1.15.2-alpine
+    ports:
+      - "4433:4433"
+      - "5124:5124"
+    volumes:
+      - ${PWD}/backend/conf/nginx:/etc/nginx/conf.d:ro
+      - ${PWD}/backend/retro/flask/static:/usr/share/nginx/html:ro
+      - ${PWD}/backend/conf/certs:/etc/ssl:ro
+    depends_on:
+      - api
+      - websocket
   api:
     build:
         context: ./backend/
         dockerfile: Dockerfile.api
-    links:
+    depends_on:
       - redis
     ports:
-      - "80:80"
+      - "8880:8880"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - TEMPLATE_CONFIG=/app/conf/templates.cfg
+      - TEMPLATE_CONFIG=/usr/src/app/conf/templates.cfg
   websocket:
     build:
         context: ./backend/
         dockerfile: Dockerfile.websocket
-    links:
+    depends_on:
       - redis
     ports:
-      - "5124:5124"
+      - "4215:4215"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379

@@ -8,7 +8,7 @@ class Config(object):
         self.redis_host = None
         self.redis_port = None
         self.websocket_host = "0.0.0.0"
-        self.websocket_port = 5124
+        self.websocket_port = 4215
         self.flask_secret = "secret!"
         self.template_config = None
 
