@@ -4,6 +4,7 @@ services:
   nginx:
     image: nginx:1.15.2-alpine
     ports:
+      - "80:80"
       - "4433:4433"
       - "5124:5124"
     volumes:
@@ -43,3 +44,9 @@ services:
       - ${PWD}/backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
+  okta-proxy:
+    image: okta-proxy
+    ports:
+      - "443:443"
+    depends_on:
+      - nginx
