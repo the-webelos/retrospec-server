@@ -17,16 +17,6 @@ def buildapp_from_config(cfg):
 app = buildapp_from_config(Config.from_env())
 
 
-@app.route("/")
-def main():
-    return app.send_static_file('index.html')
-
-
-@app.route('/<path:path>')
-def static_file(path):
-    return app.send_static_file(path)
-
-
 if __name__ == "__main__":
     cfg_ = Config.from_env()
     app.run(host=cfg_.retro_api_host, port=cfg_.retro_api_port, debug=True)
