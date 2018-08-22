@@ -1,3 +1,4 @@
+from functools import wraps
 import json
 import logging
 from flask import Blueprint, make_response, request, Response
@@ -19,6 +20,10 @@ def build_blueprint(board_engine):
     @blueprint.route("/api/v1/healthcheck", methods=["GET"])
     def healthcheck():
         return make_response("Success", 200)
+
+    @blueprint.route("/api/v1/auth", methods=["GET"])
+    def auth():
+        return make_response_json({"username": request.headers['X-Saml-Subject']})
 
     @blueprint.route("/api/v1/boards", methods=["GET"])
     def get_all_boards():
