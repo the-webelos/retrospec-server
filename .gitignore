@@ -57,3 +57,5 @@ $RECYCLE.BIN/
 
 .vscode/
 .pytest_cache/
+
+redis-data/

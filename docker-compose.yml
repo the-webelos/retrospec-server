@@ -42,6 +42,7 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - ${PWD}/backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ${PWD}/redis-data:/data
     ports:
       - "6379:6379"
   okta-proxy:
