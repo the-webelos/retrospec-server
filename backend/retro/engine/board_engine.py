@@ -5,7 +5,9 @@ from datetime import datetime
 from retro.chain.board import Board
 from retro.chain.node import BoardNode, Node
 from retro.store.exceptions import ExistingNodeError
+from retro.store import Store
 from retro.utils import get_store, get_index, unix_time_millis
+from retro.utils.config import Config
 
 _logger = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ _logger = logging.getLogger(__name__)
 class BoardEngine(object):
     _default_template = {"id": "empty", "name": "Empty", "description": "Empty template with 0 columns", "columns": []}
 
-    def __init__(self, config, store=None, index=None):
+    def __init__(self, config: Config, store: Store=None, index=None):
         self.config = config
         self.store = store if store else get_store(config)
         self.index = index if index else get_index(config)
@@ -22,7 +24,7 @@ class BoardEngine(object):
     def get_templates(self):
         return list(self.templates.values())
 
-    def create_board(self, name, creator, template=None):
+    def create_board(self, name: str, creator: str, template: str=None):
         template_def = self.templates[template] if template else {'columns': []}
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
 
@@ -36,7 +38,7 @@ class BoardEngine(object):
 
         return self._generate_nodes_from_template(template_def, board_node.id, nodes=[board_node])
 
-    def _generate_nodes_from_template(self, template_def, board_id, nodes=None):
+    def _generate_nodes_from_template(self, template_def: dict, board_id: str, nodes=None):
         nodes = nodes or []
 
         def _add_node(_parent_id, content):
@@ -105,7 +107,7 @@ class BoardEngine(object):
         board = Board(self.store, board_id)
         return board.get_node(node_id)
 
-    def add_node(self, board_id, parent_id, content=None):
+    def add_node(self, board_id: str, parent_id: str, content: dict=None):
         board = Board(self.store, board_id)
 
         return board.add_node(content or {}, parent_id)

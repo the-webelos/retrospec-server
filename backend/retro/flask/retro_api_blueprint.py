@@ -3,6 +3,7 @@ import json
 import logging
 from flask import Blueprint, make_response, request, Response
 from retro.chain.operations import OperationFactory
+from retro.engine.image_engine import ImageEngine
 from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError, ExistingNodeError
 from .blueprint_helpers import make_response_json
 
@@ -11,6 +12,8 @@ _logger = logging.getLogger(__name__)
 
 def build_blueprint(board_engine):
     blueprint = Blueprint('retro_api', __name__)
+
+    image_engine = ImageEngine(board_engine)
 
     @blueprint.errorhandler(Exception)
     def _unhandled_exception(_ex):
@@ -206,6 +209,17 @@ def build_blueprint(board_engine):
         nodes = board_engine.remove_node(board_id, node_id, cascade)
 
         return make_response_json({"deleted": [node.to_dict() for node in nodes]})
+
+    @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>/import_children", methods=["POST"])
+    def import_nodes_from_image(board_id, node_id):
+        _logger.warn("IMPORT FILE")
+        if 'file' not in request.files:
+            raise Exception("Missing file part")
+
+        image_file = request.files['file']
+        nodes = image_engine.import_cards(board_id, node_id, image_file.stream.read())
+
+        return make_response_json({"nodes": [node.to_dict() for node in nodes]})
 
     @blueprint.route("/api/v1/templates", methods=["GET"])
     def get_board_templates():
