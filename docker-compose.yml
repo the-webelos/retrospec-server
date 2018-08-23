@@ -39,6 +39,8 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
   redis:
     image: redis:4-alpine
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]

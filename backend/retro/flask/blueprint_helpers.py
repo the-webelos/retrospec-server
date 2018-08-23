@@ -2,15 +2,15 @@ import datetime
 import decimal
 import json
 from flask import make_response
-from retro.utils import timedelta_total_seconds
+from retro.utils import timedelta_total_seconds, unix_time_millis
 
 
 def default_encoder(obj):
     """
     JSON encoder function for special classes.
     """
-    if isinstance(obj, datetime.date):
-        return obj.isoformat()
+    if isinstance(obj, datetime.datetime):
+        return unix_time_millis(obj.timestamp())
     if isinstance(obj, datetime.timedelta):
         return timedelta_total_seconds(obj)
     elif isinstance(obj, decimal.Decimal):

@@ -5,7 +5,7 @@ from datetime import datetime
 from retro.chain.board import Board
 from retro.chain.node import BoardNode, Node
 from retro.store.exceptions import ExistingNodeError
-from retro.utils import get_store, get_index
+from retro.utils import get_store, get_index, unix_time_millis
 
 _logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BoardEngine(object):
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
 
         # Not a huge fan of setting the time here, but it works for now
-        now = datetime.now()
+        now = unix_time_millis(datetime.now())
         board_node.create_time = now
         board_node.last_update_time = now
         self.store.create_board(board_node)
