@@ -1,4 +1,4 @@
-from functools import wraps
+import flask
 import json
 import logging
 from flask import Blueprint, make_response, request, Response
@@ -17,13 +17,17 @@ def build_blueprint(board_engine):
         _logger.exception("Unhandled exception from retro API request.")
         return "Unhandled exception. Check logs for details", 500
 
+    @blueprint.before_request
+    def init_request():
+        flask.g.user_id = request.headers.get('X-Saml-Subject')
+
     @blueprint.route("/api/v1/healthcheck", methods=["GET"])
     def healthcheck():
         return make_response("Success", 200)
 
     @blueprint.route("/api/v1/auth", methods=["GET"])
     def auth():
-        return make_response_json({"username": request.headers['X-Saml-Subject']})
+        return make_response_json({"username": flask.g.user_id})
 
     @blueprint.route("/api/v1/boards", methods=["GET"])
     def get_all_boards():
@@ -64,7 +68,7 @@ def build_blueprint(board_engine):
         if not name:
             return make_response("No board name provided!", 400)
 
-        board_nodes = board_engine.create_board(name, template)
+        board_nodes = board_engine.create_board(name, flask.g.user_id, template=template)
 
         return make_response_json({"nodes": [node.to_dict() for node in board_nodes]})
 

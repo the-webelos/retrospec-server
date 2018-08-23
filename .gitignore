@@ -59,3 +59,4 @@ $RECYCLE.BIN/
 .pytest_cache/
 
 redis-data/
+mongo-data/

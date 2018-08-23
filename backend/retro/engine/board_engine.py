@@ -22,7 +22,7 @@ class BoardEngine(object):
     def get_templates(self):
         return list(self.templates.values())
 
-    def create_board(self, name, template=None):
+    def create_board(self, name, creator, template=None):
         template_def = self.templates[template] if template else {'columns': []}
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
 
@@ -30,6 +30,7 @@ class BoardEngine(object):
         now = unix_time_millis(datetime.now())
         board_node.create_time = now
         board_node.last_update_time = now
+        board_node.creator = creator
         self.store.create_board(board_node)
         self.index.create_board(board_node)
 
