@@ -25,6 +25,8 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
       - TEMPLATE_CONFIG=/usr/src/app/conf/templates.cfg
   websocket:
     build:
@@ -51,3 +53,9 @@ services:
       - "443:443"
     depends_on:
       - nginx
+  mongodb:
+    image: mongo:latest
+    container_name: "mongodb"
+    restart: always
+    ports:
+      - 27017:27017

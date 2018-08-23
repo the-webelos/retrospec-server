@@ -22,12 +22,10 @@ def default_encoder(obj):
 def make_response_json(data, *args, **kwargs):
     if not data:
         response = make_response_empty()
-    elif args or kwargs:
+    else:
         json_kwargs = {"default": default_encoder}
         json_kwargs.update(kwargs)
         response = make_response(json.dumps(data, *args, **json_kwargs))
-    else:
-        response = make_response(json.dumps(data))
     response.headers['Content-Type'] = "application/json; charset=utf-8"
     return response
 
