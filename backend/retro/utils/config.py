@@ -7,6 +7,8 @@ class Config(object):
         self.retro_api_port = 5123
         self.redis_host = None
         self.redis_port = None
+        self.mongo_host = None
+        self.mongo_port = None
         self.websocket_host = "0.0.0.0"
         self.websocket_port = 4215
         self.flask_secret = "secret!"

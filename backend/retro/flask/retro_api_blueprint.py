@@ -29,10 +29,21 @@ def build_blueprint(board_engine):
     def get_all_boards():
         try:
             start = int(request.args.get("start", 0))
-            rows = int(request.args.get("rows", 20))
+            count = int(request.args.get("count", 20))
+            sort_key = request.args.get("sort_key")
+            sort_order = request.args.get("sort_order")
+            filters = {}
+            search_terms = {}
 
-            boards = board_engine.get_boards(start=start, rows=rows)
-            response = make_response_json({"boards": [node.to_dict() for node in boards]})
+            for k, v in request.args.items():
+                if k.startswith("filter."):
+                    filters[k[7:]] = v
+                elif k.startswith("search."):
+                    search_terms[k[7:]] = v
+
+            boards = board_engine.get_boards(filters=filters or None, search_terms=search_terms or None,
+                                             start=start, count=count, sort_key=sort_key, sort_order=sort_order)
+            response = make_response_json({"boards": boards})
         except (ValueError, TypeError) as ver:
             _logger.exception(ver)
             response = make_response("Invalid request parameters.", 400)

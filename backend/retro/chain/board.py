@@ -59,7 +59,7 @@ class Board(object):
             if parent.child:
                 child = proxy.get_node(parent.child)
             # we will insert this between parent and child nodes
-            node = ContentNode(new_node_id, node_content, parent=parent_id, child=parent.child,
+            node = ContentNode(new_node_id, content=node_content, parent=parent_id, child=parent.child,
                                column_header=column_header_parent.id)
 
             parent.set_child(node.id)
@@ -67,7 +67,7 @@ class Board(object):
                 child.parent = node.id
         else:
             # Parent is the top of the chain.  We will insert this as a new leaf node.
-            node = ColumnHeaderNode(new_node_id, node_content, parent=parent_id)
+            node = ColumnHeaderNode(new_node_id, content=node_content, parent=parent_id)
             parent.set_child(node.id)
 
         update_nodes = [parent, node, child] if child else [parent, node]
@@ -171,7 +171,7 @@ class Board(object):
             # node is unlocked and we want to lock it
             lock_nodes.append((node_id, lock))
 
-        # apply operations (SET, INCR, etc) to node
+        # apply operations (SET, INCR, DELETE, etc.) to node
         for operation in operations:
             operation.execute(node)
 

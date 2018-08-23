@@ -1,21 +1,39 @@
 from retro.chain.exceptions import UnknownNodeTypeError
 
-NODE_REGISTRY = {}
+NODE_ID_KEY = "id"
+NODE_TYPE_KEY = "type"
+CONTENT_KEY = "content"
+VERSION_KEY = "version"
+ORIG_VERSION_KEY = "orig_version"
+CREATOR_KEY = "creator"
+CREATE_TIME_KEY = "create_time"
+LAST_UPDATE_TIME_KEY = "last_update_time"
+CHILDREN_KEY = "children"
+PARENT_KEY = "parent"
+CHILD_KEY = "child"
+COLUMN_HEADER_KEY = "column_header"
+
+_NODE_REGISTRY = {}
 
 
 def register_node(cls):
-    NODE_REGISTRY[cls.NODE_TYPE] = cls
+    _NODE_REGISTRY[cls.NODE_TYPE] = cls
     return cls
 
 
 class Node(object):
     NODE_TYPE = 'Node'
+    INDEX_FIELDS = []
 
-    def __init__(self, node_id, content=None, version=1, orig_version=None):
+    def __init__(self, node_id, content=None, version=1, orig_version=None,
+                 creator=None, create_time=None, last_update_time=None, **kwargs):
         self.id = node_id
         self.content = content
         self.version = version
         self.orig_version = orig_version
+        self.creator = creator
+        self.create_time = create_time
+        self.last_update_time = last_update_time
         self.parent = None
 
     def neighbors(self):
@@ -47,27 +65,48 @@ class Node(object):
         return new_node
 
     def to_dict(self):
-        d = {"type": self.NODE_TYPE, "id": self.id, "content": self.content, 'version': self.version,
-             "orig_version": self.orig_version}
+        d = {
+            NODE_TYPE_KEY: self.NODE_TYPE,
+            NODE_ID_KEY: self.id,
+            CONTENT_KEY: self.content,
+            VERSION_KEY: self.version,
+            ORIG_VERSION_KEY: self.orig_version,
+            CREATOR_KEY: self.creator,
+            CREATE_TIME_KEY: self.create_time,
+            LAST_UPDATE_TIME_KEY: self.last_update_time
+        }
         d.update(self._dict_items())
 
         return d
 
     @staticmethod
     def from_dict(node_dict):
-        cls = NODE_REGISTRY.get(node_dict["type"])
+        cls = _NODE_REGISTRY.get(node_dict[NODE_TYPE_KEY])
         if not cls:
-            raise UnknownNodeTypeError("Unknown node type: %s" % node_dict['type'])
+            raise UnknownNodeTypeError("Unknown node type: %s" % node_dict[NODE_TYPE_KEY])
 
-        return cls(node_dict["id"], **{k: v for k, v in node_dict.items() if k not in ("id", "type")})
+        # Ignore id because we already passed it in, and ignore type because it's inferred by the class type
+        return cls(node_dict[NODE_ID_KEY], **{k: v for k, v in node_dict.items()
+                                              if k not in (NODE_ID_KEY, NODE_TYPE_KEY)})
+
+    def to_index_dict(self):
+        d = {}
+
+        for field in self.INDEX_FIELDS:
+            val = getattr(self, field)
+            if val is not None:
+                d[field] = val
+
+        return d
 
 
 @register_node
 class BoardNode(Node):
     NODE_TYPE = 'Board'
+    INDEX_FIELDS = [NODE_ID_KEY, CREATOR_KEY, CREATE_TIME_KEY, LAST_UPDATE_TIME_KEY, CONTENT_KEY]
 
-    def __init__(self, node_id, content=None, version=1, orig_version=None, children=set()):
-        super(BoardNode, self).__init__(node_id, content, version, orig_version)
+    def __init__(self, node_id, children=set(), **kwargs):
+        super(BoardNode, self).__init__(node_id, **kwargs)
         self.children = set(children)
 
     def neighbors(self):
@@ -81,16 +120,16 @@ class BoardNode(Node):
         self.children.add(node_id)
 
     def _dict_items(self):
-        return {"children": list(self.children)}
+        return {CHILDREN_KEY: list(self.children)}
 
 
 class ParentChildNode(Node):
     NODE_TYPE = 'ParentChild'
 
-    def __init__(self, node_id, content=None, version=1, orig_version=None, parent=None, child=None):
-        super(ParentChildNode, self).__init__(node_id, content, version, orig_version)
-        self.parent=parent
-        self.child=child
+    def __init__(self, node_id, parent=None, child=None, **kwargs):
+        super(ParentChildNode, self).__init__(node_id, **kwargs)
+        self.parent = parent
+        self.child = child
 
     def remove_child(self, node_id):
         if self.child == node_id:
@@ -106,19 +145,19 @@ class ParentChildNode(Node):
             yield self.child
 
     def _dict_items(self):
-        return {"parent": self.parent, "child": self.child}
+        return {PARENT_KEY: self.parent, CHILD_KEY: self.child}
 
 
 @register_node
 class ContentNode(ParentChildNode):
     NODE_TYPE = 'Content'
 
-    def __init__(self, node_id, content=None, version=1, orig_version=None, parent=None, child=None, column_header=None):
-        super(ContentNode, self).__init__(node_id, content, version, orig_version, parent, child)
+    def __init__(self, node_id, column_header=None, **kwargs):
+        super(ContentNode, self).__init__(node_id, **kwargs)
         self.column_header = column_header
 
     def _dict_items(self):
-        return {"parent": self.parent, "child": self.child, "column_header": self.column_header}
+        return {PARENT_KEY: self.parent, CHILD_KEY: self.child, COLUMN_HEADER_KEY: self.column_header}
 
 
 @register_node

@@ -1,0 +1,2 @@
+class InvalidSortOrder(Exception):
+    pass

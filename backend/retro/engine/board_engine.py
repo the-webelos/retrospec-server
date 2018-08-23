@@ -1,10 +1,11 @@
 import json
 import logging
+from datetime import datetime
 
 from retro.chain.board import Board
 from retro.chain.node import BoardNode, Node
 from retro.store.exceptions import ExistingNodeError
-from retro.utils import get_store
+from retro.utils import get_store, get_index
 
 _logger = logging.getLogger(__name__)
 
@@ -12,9 +13,10 @@ _logger = logging.getLogger(__name__)
 class BoardEngine(object):
     _default_template = {"id": "empty", "name": "Empty", "description": "Empty template with 0 columns", "columns": []}
 
-    def __init__(self, config, store=None):
+    def __init__(self, config, store=None, index=None):
         self.config = config
         self.store = store if store else get_store(config)
+        self.index = index if index else get_index(config)
         self.templates = self._build_templates(self.config.template_config)
 
     def get_templates(self):
@@ -23,7 +25,13 @@ class BoardEngine(object):
     def create_board(self, name, template=None):
         template_def = self.templates[template] if template else {'columns': []}
         board_node = BoardNode(self.store.next_node_id(), content={"name": name})
+
+        # Not a huge fan of setting the time here, but it works for now
+        now = datetime.now()
+        board_node.create_time = now
+        board_node.last_update_time = now
         self.store.create_board(board_node)
+        self.index.create_board(board_node)
 
         return self._generate_nodes_from_template(template_def, board_node.id, nodes=[board_node])
 
@@ -77,21 +85,20 @@ class BoardEngine(object):
         return board.nodes()
 
     def has_board(self, board_id):
-        return board_id in self.store.get_board_ids()
+        return self.index.has_board(board_id)
 
     def delete_board(self, board_id):
+        self.index.remove_board(board_id)
         self.store.remove_board(board_id)
 
         board = Board(self.store, board_id)
 
         return board.delete()
 
-    def get_boards(self, start=0, rows=20):
-        boards = []
-        for board_id in self.store.get_board_ids():
-            boards.append(self.store.get_node(board_id))
-
-        return boards
+    def get_boards(self, filters=None, search_terms=None, start=0, count=20, sort_key=None, sort_order=None):
+        return self.index.get_boards(filters=filters, search_terms=search_terms,
+                                     start=start, count=count,
+                                     sort_key=sort_key, sort_order=sort_order)
 
     def get_node(self, board_id, node_id):
         board = Board(self.store, board_id)
@@ -108,7 +115,13 @@ class BoardEngine(object):
 
     def edit_node(self, board_id, node_id, operations, lock, unlock):
         board = Board(self.store, board_id)
-        return board.edit_node(node_id, operations, lock, unlock)
+        node = board.edit_node(node_id, operations, lock, unlock)
+
+        # If the node we just updated was a board, update the index.
+        if board.board_id == node.id:
+            self.index.update_board(node)
+
+        return node
 
     def remove_node(self, board_id, node_id, cascade=False):
         board = Board(self.store, board_id)
