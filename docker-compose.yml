@@ -49,12 +49,12 @@ services:
       - ${PWD}/redis-data:/data
     ports:
       - "6379:6379"
-  #okta-proxy:
-  #  image: okta-proxy
-  #  ports:
-  #    - "443:443"
-  #  depends_on:
-  #    - nginx
+  okta-proxy:
+    image: okta-proxy
+    ports:
+      - "443:443"
+    depends_on:
+      - nginx
   mongodb:
     image: mongo:latest
     container_name: "mongodb"
