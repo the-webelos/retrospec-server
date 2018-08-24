@@ -4,7 +4,6 @@ from retro.chain.node import CREATE_TIME_KEY, NODE_ID_KEY
 from retro.index import Index
 from .exceptions import InvalidSortOrder
 
-
 _MONGO_ID_KEY = "_id"
 SORT_ORDER_MAP = {"asc": ASCENDING, "desc": DESCENDING}
 
@@ -17,7 +16,8 @@ SORT_ORDER_MAP = {"asc": ASCENDING, "desc": DESCENDING}
 class MongoIndex(Index):
     def __init__(self, host=None, port=None, client=None):
         super(MongoIndex, self).__init__()
-        self.__client = client if client is not None else MongoClient(host=host, port=port)
+        # pass connect=False to avoid race condition when MongoClient is started through uwsgi (pre-fork)
+        self.__client = client if client is not None else MongoClient(host=host, port=port, connect=False)
 
         db = self.__client.retrospec
         self._boards_collection = db.boards
@@ -39,10 +39,10 @@ class MongoIndex(Index):
 
         return [
             board for board in self._boards_collection
-                .find(q_filters, {_MONGO_ID_KEY: False})
-                .skip(start)
-                .limit(count)
-                .sort(q_sort_key, q_sort_order)
+                                   .find(q_filters, {_MONGO_ID_KEY: False})
+                                   .skip(start)
+                                   .limit(count)
+                                   .sort(q_sort_key, q_sort_order)
         ]
 
     def create_board(self, board_node):

@@ -18,7 +18,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN apk del python3-dev gcc musl-dev
 
 CMD [ "uwsgi", "--socket", "0.0.0.0:8880", \
-               "--uid", "root", \
                "--plugins", "python3", \
                "--protocol", "uwsgi", \
+               "--master", \
                "--ini", "/usr/src/app/uwsgi.ini" ]

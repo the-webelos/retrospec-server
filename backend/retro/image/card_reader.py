@@ -7,7 +7,7 @@ import boto3
 class CardReader(object):
     CARD_COLOR_BITS = 2
 
-    def __init__(self, image_bytes: str):
+    def __init__(self, image_bytes: bytes):
         self.image = self._image_from_bytes(image_bytes)
 
     def get_cards_content(self):
@@ -118,15 +118,15 @@ class CardReader(object):
 
         squares = []
         for thrs in range(1, 255, 6):
-            bin = cv.threshold(blur, thrs, 255, cv.THRESH_BINARY)[1]
-            contours = cv.findContours(bin, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)[1]
+            dst = cv.threshold(blur, thrs, 255, cv.THRESH_BINARY)[1]
+            contours = cv.findContours(dst, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)[1]
 
             for cnt in contours:
                 cnt_len = cv.arcLength(cnt, True)
                 cnt = cv.approxPolyDP(cnt, 0.02*cnt_len, True)
                 if len(cnt) == 4:
                     cnt_area = cv.contourArea(cnt)
-                    if cnt_area > 1000 and cnt_area < img_area_thrs and cv.isContourConvex(cnt):
+                    if 1000 < cnt_area < img_area_thrs and cv.isContourConvex(cnt):
                         cnt = cnt.reshape(-1, 2)
                         max_cos = np.max([self._angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4]) for i in range(4)])
                         if max_cos < 0.05:
@@ -144,9 +144,8 @@ if __name__ == '__main__':
     from pprint import pprint
 
     with open(sys.argv[1], 'rb') as f:
-        image_bytes = f.read()
+        card_reader = CardReader(f.read())
 
-    card_reader = CardReader(image_bytes)
     cards = card_reader.get_cards_content()
 
     pprint(cards)

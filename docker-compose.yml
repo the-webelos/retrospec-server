@@ -2,14 +2,15 @@ version: '3'
 services:
   nginx:
     image: nginx:1.15.2-alpine
+    restart: always
     ports:
       - "80:80"
       - "4433:4433"
       - "5124:5124"
     volumes:
-      - ${PWD}/backend/conf/nginx:/etc/nginx/conf.d:ro
-      - ${PWD}/backend/retro/flask/static:/usr/share/nginx/html:ro
-      - ${PWD}/backend/conf/certs:/etc/ssl:ro
+      - ./backend/conf/nginx:/etc/nginx/conf.d:ro
+      - ${WOLFPACK_ROOT:-./backend/retro/flask}/static:/usr/share/nginx/html:ro
+      - ${WOLFPACK_ROOT:-./backend}/conf/certs:/etc/ssl:ro
     depends_on:
       - api
       - websocket
@@ -17,8 +18,10 @@ services:
     build:
         context: ./backend/
         dockerfile: Dockerfile.api
+    restart: always
     depends_on:
       - redis
+      - mongodb
     volumes:
       - ~/.aws:/root/.aws:ro
     ports:
@@ -29,12 +32,11 @@ services:
       - MONGO_HOST=mongodb
       - MONGO_PORT=27017
       - TEMPLATE_CONFIG=/usr/src/app/conf/templates.cfg
-        #      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-        #      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
   websocket:
     build:
         context: ./backend/
         dockerfile: Dockerfile.websocket
+    restart: always
     depends_on:
       - redis
     ports:
@@ -47,22 +49,16 @@ services:
   redis:
     image: redis:4-alpine
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: always
     volumes:
-      - ${PWD}/backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
-      - ${PWD}/redis-data:/data
+      - ./backend/conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ${WOLFPACK_ROOT:-./backend}/redis-data:/data
     ports:
       - "6379:6379"
-    #  okta-proxy:
-    #image: okta-proxy
-    #ports:
-    #  - "443:443"
-    #depends_on:
-    #  - nginx
   mongodb:
     image: mongo:latest
-    container_name: "mongodb"
     restart: always
     ports:
-      - 27017:27017
+      - "27017:27017"
     volumes:
-      - ${PWD}/mongo-data:/data
+      - ${WOLFPACK_ROOT:-./backend}/mongo-data:/data
