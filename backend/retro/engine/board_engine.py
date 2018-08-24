@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from typing import Dict
 
 from retro.chain.board import Board
 from retro.chain.node import BoardNode, Node
@@ -24,9 +25,14 @@ class BoardEngine(object):
     def get_templates(self):
         return list(self.templates.values())
 
-    def create_board(self, name: str, creator: str, template: str=None):
+    def create_board(self, name: str, creator: str, template: str=None, content: Dict=None):
+        if not content:
+            content = {}
+
+        content['name'] = name
+
         template_def = self.templates[template] if template else {'columns': []}
-        board_node = BoardNode(self.store.next_node_id(), content={"name": name})
+        board_node = BoardNode(self.store.next_node_id(), content=content)
 
         # Not a huge fan of setting the time here, but it works for now
         now = unix_time_millis(datetime.now())
