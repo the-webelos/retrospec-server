@@ -61,4 +61,4 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ${WOLFPACK_ROOT:-./backend}/mongo-data:/data
+      - ${WOLFPACK_ROOT:-./backend}/mongo-data:/data/db
