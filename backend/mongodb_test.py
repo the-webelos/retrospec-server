@@ -50,7 +50,7 @@ SAMPLE_DATA = [
         "content": {
             "name": "myboardthing",
             "owner": "someguy",
-            "group": "Nic Cage"
+            "group": "nic Cage"
         },
     }
 ]

@@ -1,10 +1,12 @@
+import locale
 import re
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import collation, MongoClient, ASCENDING, DESCENDING
 from retro.chain.node import CREATE_TIME_KEY, NODE_ID_KEY
 from retro.index import Index
 from .exceptions import InvalidSortOrder
 
 _MONGO_ID_KEY = "_id"
+_COLLATION = collation.Collation(locale.getdefaultlocale()[0] or "en_US")
 SORT_ORDER_MAP = {"asc": ASCENDING, "desc": DESCENDING}
 
 
@@ -43,6 +45,7 @@ class MongoIndex(Index):
                                    .skip(start)
                                    .limit(count)
                                    .sort(q_sort_key, q_sort_order)
+                                   .collation(_COLLATION)
         ]
 
     def create_board(self, board_node):
