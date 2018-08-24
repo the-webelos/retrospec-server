@@ -25,11 +25,9 @@ class BoardEngine(object):
     def get_templates(self):
         return list(self.templates.values())
 
-    def create_board(self, name: str, creator: str, template: str=None, content: Dict=None):
+    def create_board(self, creator: str, template: str=None, content: Dict=None):
         if not content:
             content = {}
-
-        content['name'] = name
 
         template_def = self.templates[template] if template else {'columns': []}
         board_node = BoardNode(self.store.next_node_id(), content=content)

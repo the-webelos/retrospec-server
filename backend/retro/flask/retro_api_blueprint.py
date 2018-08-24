@@ -66,13 +66,12 @@ def build_blueprint(board_engine):
     @blueprint.route("/api/v1/boards", methods=["POST"])
     def create_board():
         args = request.json or {}
-        name = args.get("name")
         template = args.get("template")
         content = args.get("content")
-        if not name:
+        if not content.get("name"):
             return make_response("No board name provided!", 400)
 
-        board_nodes = board_engine.create_board(name, flask.g.user_id, template=template, content=content)
+        board_nodes = board_engine.create_board(flask.g.user_id, template=template, content=content)
 
         return make_response_json({"nodes": [node.to_dict() for node in board_nodes]})
 
