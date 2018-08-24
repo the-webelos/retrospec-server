@@ -1,11 +1,12 @@
 import json
 import logging
 import redis
+from typing import List
 from datetime import timedelta
 from redis import WatchError
 from retro.chain.node import Node
 from retro.events.event_processor_factory import EventProcessorFactory
-from retro.store import Store
+from retro.store import Store, Group
 from retro.store.exceptions import NodeNotFoundError
 from retro.websocket_server.websocket_message import BoardDeleteMessage, NodeLockMessage, NodeUnlockMessage, \
     NodeUpdateMessage, NodeDeleteMessage
@@ -16,6 +17,7 @@ _logger = logging.getLogger(__name__)
 
 class RedisStore(Store):
     BOARD_SET_KEY = 'boards'
+    GROUP_HASH_KEY = 'groups'
 
     def __init__(self, host=None, port=None, client=None):
         super(RedisStore, self).__init__()
@@ -81,6 +83,27 @@ class RedisStore(Store):
         p.punsubscribe(board_update_channel)
         p.punsubscribe(key_expiration_channel)
         _logger.info("Subscription terminated")
+
+    def get_groups(self) -> List[Group]:
+        groups = self.client.hgetall(self.GROUP_HASH_KEY)
+
+        return [Group(k, v) for k, v in groups.items()]
+
+    def get_group(self, group_id: str) -> Group:
+        name = self.client.hget(self.GROUP_HASH_KEY, group_id)
+
+        if not name:
+            raise KeyError("Unknown group '%s'" % group_id)
+
+        return Group(group_id, name)
+
+    def upsert_group(self, group_id: str, name: str) -> Group:
+        self.client.hset(self.GROUP_HASH_KEY, group_id, name)
+
+        return Group(group_id, name)
+
+    def remove_group(self, group_id: str) -> bool:
+        return self.client.hdel(self.GROUP_HASH_KEY, group_id) > 0
 
     @staticmethod
     def _get_lock_key(node_id):

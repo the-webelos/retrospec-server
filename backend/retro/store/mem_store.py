@@ -1,7 +1,8 @@
 import threading
 
+from typing import List
 from retro.chain.node import Node
-from retro.store import Store
+from retro.store import Store, Group
 
 
 class MemStore(Store):
@@ -9,6 +10,7 @@ class MemStore(Store):
         super(MemStore, self).__init__()
         self.nodes = nodes if nodes else {}
         self.boards = set()
+        self.groups = dict()
         self.lock = threading.RLock()
         self.node_locks = dict()
 
@@ -39,6 +41,25 @@ class MemStore(Store):
                 board_ids.append(node_id)
 
         return board_ids
+
+    def get_groups(self) -> List[Group]:
+        return [Group(k, v) for k, v in self.groups.items()]
+
+    def get_group(self, group_id: str) -> Group:
+        name = self.groups.get(group_id)
+
+        if not name:
+            raise KeyError("Unknown group '%s'" % group_id)
+
+        return Group(group_id, name)
+
+    def upsert_group(self, group_id, name) -> Group:
+        self.groups[group_id] = name
+
+        return Group(group_id, name)
+
+    def remove_group(self, group_id) -> bool:
+        return self.groups.pop(group_id, None) is not None
 
     def board_update_listener(self, board_id, message_cb=lambda *x: True):
         pass
