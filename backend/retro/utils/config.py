@@ -4,7 +4,7 @@ import os
 class Config(object):
     def __init__(self):
         self.retro_api_host = "0.0.0.0"
-        self.retro_api_port = 5123
+        self.retro_api_port = 8880
         self.redis_host = None
         self.redis_port = None
         self.mongo_host = None

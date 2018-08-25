@@ -67,7 +67,7 @@ def build_blueprint(board_engine):
     def create_board():
         args = request.json or {}
         template = args.get("template")
-        content = args.get("content")
+        content = args.get("content") or {}
         if not content.get("name"):
             return make_response("No board name provided!", 400)
 
@@ -212,7 +212,6 @@ def build_blueprint(board_engine):
 
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>/import_children", methods=["POST"])
     def import_nodes_from_image(board_id, node_id):
-        _logger.warn("IMPORT FILE")
         if 'file' not in request.files:
             raise Exception("Missing file part")
 

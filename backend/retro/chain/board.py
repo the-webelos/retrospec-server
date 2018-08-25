@@ -1,6 +1,6 @@
 from functools import partial
 from retro.chain.node import ColumnHeaderNode, ContentNode, Node
-from retro.store import TransactionNodes
+from retro.store.store import TransactionNodes
 from retro.store.exceptions import NodeLockedError, UnlockFailureError
 
 

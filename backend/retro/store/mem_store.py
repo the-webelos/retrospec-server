@@ -2,7 +2,7 @@ import threading
 
 from typing import List
 from retro.chain.node import Node
-from retro.store import Store, Group
+from retro.store.store import Store, Group
 
 
 class MemStore(Store):
@@ -30,9 +30,6 @@ class MemStore(Store):
 
     def remove_board(self, board_id):
         self.boards.remove(board_id)
-
-    def get_board_ids(self):
-        return self.boards
 
     def get_ids_by_type(self, node_type):
         board_ids = []

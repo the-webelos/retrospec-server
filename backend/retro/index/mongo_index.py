@@ -18,7 +18,7 @@ SORT_ORDER_MAP = {"asc": ASCENDING, "desc": DESCENDING}
 class MongoIndex(Index):
     def __init__(self, host=None, port=None, client=None):
         super(MongoIndex, self).__init__()
-        # pass connect=False to avoid race condition when MongoClient is started through uwsgi (pre-fork)
+        # connect=False to avoid race condition when MongoClient is started through uwsgi (pre-fork)
         self.__client = client if client is not None else MongoClient(host=host, port=port, connect=False)
 
         db = self.__client.retrospec
@@ -49,9 +49,12 @@ class MongoIndex(Index):
         ]
 
     def create_board(self, board_node):
-        self._boards_collection.insert_one(board_node.to_index_dict())
+        self._upsert_board(board_node)
 
     def update_board(self, board_node):
+        self._upsert_board(board_node)
+
+    def _upsert_board(self, board_node):
         self._boards_collection.update_one(
             {NODE_ID_KEY: board_node.id},
             {"$set": board_node.to_index_dict()},

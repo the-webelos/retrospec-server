@@ -6,6 +6,7 @@ from threading import Lock
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 from retro.engine.board_engine import BoardEngine
+from retro.store import get_store
 from retro.utils.config import Config
 from retro.utils.retro_logging import setup_basic_logging
 from retro.websocket_server import namespace
@@ -31,7 +32,7 @@ def buildapp_from_config(cfg):
 
 cfg_ = Config.from_env()
 app, socketio = buildapp_from_config(cfg_)
-board_engine = BoardEngine(cfg_)
+board_engine = BoardEngine(cfg_, get_store(cfg_))
 thread = None
 thread_lock = Lock()
 

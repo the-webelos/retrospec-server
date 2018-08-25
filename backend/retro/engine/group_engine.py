@@ -2,16 +2,14 @@ import logging
 
 from typing import List
 
-from retro.store import Store, Group
-from retro.utils import get_store
-from retro.utils.config import Config
+from retro.store.store import Store, Group
 
 _logger = logging.getLogger(__name__)
 
 
 class GroupEngine(object):
-    def __init__(self, config: Config=None, store: Store=None):
-        self.store = store if store else get_store(config)
+    def __init__(self, store: Store):
+        self.store = store
 
     def get_group(self, group_id: str) -> Group:
         return self.store.get_group(group_id)

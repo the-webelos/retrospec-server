@@ -2,7 +2,7 @@
 from functools import partial
 import unittest
 
-from retro.store import TransactionNodes
+from retro.store.store import TransactionNodes
 from retro.store.redis_store import RedisStore
 from retro.chain.node import ColumnHeaderNode, BoardNode
 from test.helpers import get_redis_container, get_redis_config
