@@ -4,6 +4,7 @@ import logging
 from flask import Blueprint, make_response, request, Response
 from retro.chain.operations import OperationFactory
 from retro.engine.image_engine import ImageEngine
+from retro.index.exceptions import InvalidSortOrder
 from retro.store.exceptions import NodeLockedError, UnlockFailureError, NodeNotFoundError, ExistingNodeError
 from .blueprint_helpers import make_response_json
 
@@ -51,6 +52,9 @@ def build_blueprint(board_engine):
             boards = board_engine.get_boards(filters=filters or None, search_terms=search_terms or None,
                                              start=start, count=count, sort_key=sort_key, sort_order=sort_order)
             response = make_response_json({"boards": boards})
+        except InvalidSortOrder as iso:
+            _logger.exception(iso)
+            response = make_response("Provided sort order '%s' is invalid." % request.args.get("sort_order"), 400)
         except (ValueError, TypeError) as ver:
             _logger.exception(ver)
             response = make_response("Invalid request parameters.", 400)
