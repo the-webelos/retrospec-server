@@ -1,7 +1,9 @@
+from datetime import datetime
 from functools import partial
 from retro.chain.node import ColumnHeaderNode, ContentNode, Node
 from retro.store.store import TransactionNodes
 from retro.store.exceptions import NodeLockedError, UnlockFailureError
+from retro.utils import unix_time_millis
 
 
 class Board(object):
@@ -23,8 +25,8 @@ class Board(object):
     def get_node(self, node_id):
         return self.store.get_node(node_id)
 
-    def add_node(self, node_content, parent_id):
-        nodes = self.store.transaction(self.board_id, partial(self._add_node, node_content, parent_id))
+    def add_node(self, creator, node_content, parent_id):
+        nodes = self.store.transaction(self.board_id, partial(self._add_node, creator, node_content, parent_id))
         return nodes.updates[1]
 
     def move_node(self, node_id, new_parent_id):
@@ -48,26 +50,28 @@ class Board(object):
         nodes = self.store.transaction(self.board_id, partial(self._import_nodes, node_dicts, transform_func))
         return nodes.updates
 
-    def _add_node(self, node_content, parent_id, proxy):
+    def _add_node(self, creator, node_content, parent_id, proxy):
         parent = proxy.get_node(parent_id)
         child = None
         new_node_id = self.next_node_id()
 
         column_header_parent = self._find_first_parent(proxy, parent_id, ColumnHeaderNode.NODE_TYPE)
+        now = unix_time_millis(datetime.now())
 
         if column_header_parent:
             if parent.child:
                 child = proxy.get_node(parent.child)
             # we will insert this between parent and child nodes
-            node = ContentNode(new_node_id, content=node_content, parent=parent_id, child=parent.child,
-                               column_header=column_header_parent.id)
+            node = ContentNode(new_node_id, creator=creator, content=node_content, parent=parent_id, child=parent.child,
+                               create_time=now, column_header=column_header_parent.id)
 
             parent.set_child(node.id)
             if child:
                 child.parent = node.id
         else:
             # Parent is the top of the chain.  We will insert this as a new leaf node.
-            node = ColumnHeaderNode(new_node_id, content=node_content, parent=parent_id)
+            node = ColumnHeaderNode(new_node_id, creator=creator, content=node_content, parent=parent_id,
+                                    create_time=now)
             parent.set_child(node.id)
 
         update_nodes = [parent, node, child] if child else [parent, node]

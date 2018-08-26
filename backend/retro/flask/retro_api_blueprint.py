@@ -152,7 +152,7 @@ def build_blueprint(board_engine):
         if not parent_id:
             return make_response("No parent_id provided in request!", 400)
 
-        node = board_engine.add_node(board_id, parent_id, content)
+        node = board_engine.add_node(board_id, parent_id, flask.g.user_id, content=content)
 
         return make_response_json(node.to_dict())
 

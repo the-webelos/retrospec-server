@@ -123,9 +123,10 @@ class RedisStore(Store):
 
                     nodes = func(RedisStore(self.index, client=pipe))
 
+                    now = unix_time_millis(datetime.now())
                     board_node = self._get_node(board_id, pipe=pipe)
                     board_node.version += 1
-                    board_node.last_update_time = unix_time_millis(datetime.now())
+                    board_node.last_update_time = now
 
                     if nodes.updates or nodes.deletes or nodes.locks or nodes.unlocks:
                         # start transaction
@@ -143,6 +144,7 @@ class RedisStore(Store):
                         # Update nodes
                         for node in nodes.updates:
                             node.version = board_node.version
+                            node.last_update_time = now
 
                             # update orig version if needed
                             if node.orig_version is None:

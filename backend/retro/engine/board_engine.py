@@ -38,13 +38,13 @@ class BoardEngine(object):
         board_node.creator = creator
         self.store.create_board(board_node)
 
-        return self._generate_nodes_from_template(template_def, board_node.id, nodes=[board_node])
+        return self._generate_nodes_from_template(template_def, board_node.id, creator, nodes=[board_node])
 
-    def _generate_nodes_from_template(self, template_def: dict, board_id: str, nodes=None):
+    def _generate_nodes_from_template(self, template_def: dict, board_id: str, creator: str, nodes=None):
         nodes = nodes or []
 
         def _add_node(_parent_id, content):
-            n = self.add_node(board_id, _parent_id, content=content)
+            n = self.add_node(board_id, _parent_id, creator, content=content)
             nodes.append(n)
             return n.id
 
@@ -108,10 +108,10 @@ class BoardEngine(object):
         board = Board(self.store, board_id)
         return board.get_node(node_id)
 
-    def add_node(self, board_id: str, parent_id: str, content: dict=None):
+    def add_node(self, board_id: str, parent_id: str, creator: str, content: dict=None):
         board = Board(self.store, board_id)
 
-        return board.add_node(content or {}, parent_id)
+        return board.add_node(creator, content or {}, parent_id)
 
     def move_node(self, board_id, node_id, new_parent_id):
         board = Board(self.store, board_id)

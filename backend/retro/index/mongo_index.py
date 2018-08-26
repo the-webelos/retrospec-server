@@ -10,11 +10,6 @@ _COLLATION = collation.Collation(locale.getdefaultlocale()[0] or "en_US")
 SORT_ORDER_MAP = {"asc": ASCENDING, "desc": DESCENDING}
 
 
-# TODO Track creator on node creation
-# TODO Update last_update_time on node edit
-# TODO Create a storage manager that abstracts the index so clients don't have to update both store and index.
-# TODO   May also want to move the time declarations in there
-
 class MongoIndex(Index):
     def __init__(self, host=None, port=None, client=None):
         super(MongoIndex, self).__init__()
