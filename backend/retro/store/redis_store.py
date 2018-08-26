@@ -133,7 +133,10 @@ class RedisStore(Store):
                         pipe.multi()
 
                         # delete nodes
+                        board_delete = False
                         for node in nodes.deletes:
+                            if node.id == board_id:
+                                board_delete = True
                             pipe.delete(node.id)
 
                         # publish deletes
@@ -179,16 +182,18 @@ class RedisStore(Store):
                             pipe.publish(self._get_publish_channel(board_id),
                                          NodeUnlockMessage([node_id for node_id in nodes.unlocks]).encode())
 
-                        # update board version and last_update_time
-                        pipe.hmset(board_id, {
-                            VERSION_KEY: json.dumps({'value': board_node.version}),
-                            LAST_UPDATE_TIME_KEY: json.dumps({'value': board_node.last_update_time})
-                        })
+                        # Update board version and last_update_time as long as we're not deleting the board.
+                        if not board_delete:
+                            pipe.hmset(board_id, {
+                                VERSION_KEY: json.dumps({'value': board_node.version}),
+                                LAST_UPDATE_TIME_KEY: json.dumps({'value': board_node.last_update_time})
+                            })
 
                         pipe.execute()
 
-                        # Update the corresponding index for the board
-                        self.index.update_board(board_node)
+                        # Update the corresponding index for the board as long as we didn't just delete it.
+                        if not board_delete:
+                            self.index.update_board(board_node)
 
                     return nodes
                 except WatchError as err:
