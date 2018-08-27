@@ -219,8 +219,7 @@ def build_blueprint(board_engine):
     @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>/import_nodes", methods=["POST"])
     def import_nodes_from_image(board_id, node_id):
         image_bytes = request.files['file'].stream.read() if 'file' in request.files else base64.b64decode(request.data)
-
-        nodes = image_engine.import_cards(board_id, node_id, image_bytes)
+        nodes = image_engine.import_cards(board_id, node_id, flask.g.user_id, image_bytes)
 
         return make_response_json({"nodes": [node.to_dict() for node in nodes]})
 

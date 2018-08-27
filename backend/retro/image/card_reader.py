@@ -20,7 +20,7 @@ class CardReader(object):
         contents = []
         for bundle in bundles:
             contents.append({'text': ' '.join(bundle['words']),
-                             'color': bundle['color'][:3],
+                             'color': CardReader._get_hex_from_bundle_colors(bundle['color'][:3]),
                              'confidence': bundle['confidence']})
 
         return contents
@@ -71,7 +71,10 @@ class CardReader(object):
             color = cv.mean(self.image, mask=mask)
             # use the mask bit to limit number of colors we record
             bundle['color'] = [int(c) & mask_bit for c in color]
-            # print(f"words: {bundle['words']}, color: {color}")
+
+    @staticmethod
+    def _get_hex_from_bundle_colors(colors):
+        return "#{:02x}{:02x}{:02x}".format(colors[0], colors[1], colors[2])
 
     @staticmethod
     def _get_points_from_geometry(poly_points, shape):
