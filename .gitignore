@@ -60,3 +60,4 @@ $RECYCLE.BIN/
 
 redis-data/
 mongo-data/
+venv/
