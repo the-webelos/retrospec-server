@@ -220,7 +220,7 @@ def build_blueprint(board_engine):
     def import_nodes_from_image(board_id, node_id):
         image_bytes = request.files['file'].stream.read() if 'file' in request.files else base64.b64decode(request.data)
 
-        nodes = image_engine.import_cards(board_id, node_id, image_bytes.stream.read())
+        nodes = image_engine.import_cards(board_id, node_id, image_bytes)
 
         return make_response_json({"nodes": [node.to_dict() for node in nodes]})
 
