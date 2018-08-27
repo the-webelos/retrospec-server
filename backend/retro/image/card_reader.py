@@ -1,6 +1,5 @@
 import numpy as np
 import cv2 as cv
-
 import boto3
 
 
@@ -135,7 +134,7 @@ class CardReader(object):
 
     @staticmethod
     def _image_from_bytes(img_bytes):
-        nparr = np.fromstring(img_bytes, np.uint8)
+        nparr = np.frombuffer(img_bytes, np.uint8)
         return cv.imdecode(nparr, cv.IMREAD_COLOR)
 
 
