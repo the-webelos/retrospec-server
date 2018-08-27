@@ -1,3 +1,5 @@
+import base64
+
 import flask
 import json
 import logging
@@ -214,13 +216,11 @@ def build_blueprint(board_engine):
 
         return make_response_json({"deleted": [node.to_dict() for node in nodes]})
 
-    @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>/import_children", methods=["POST"])
+    @blueprint.route("/api/v1/boards/<board_id>/nodes/<node_id>/import_nodes", methods=["POST"])
     def import_nodes_from_image(board_id, node_id):
-        if 'file' not in request.files:
-            raise Exception("Missing file part")
+        image_bytes = request.files['file'].stream.read() if 'file' in request.files else base64.b64decode(request.data)
 
-        image_file = request.files['file']
-        nodes = image_engine.import_cards(board_id, node_id, image_file.stream.read())
+        nodes = image_engine.import_cards(board_id, node_id, image_bytes.stream.read())
 
         return make_response_json({"nodes": [node.to_dict() for node in nodes]})
 
